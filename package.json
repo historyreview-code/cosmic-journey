@@ -1,0 +1,22 @@
+{
+  "name": "cosmos-series",
+  "version": "1.0.0",
+  "private": true,
+  "description": "宇宙系列五部曲：黄道面 · 银河漫游 · 宇宙简史 · 探索宇宙史 · 揽月探火",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": { "node": ">=18" },
+  "files": [
+    "index.html",
+    "galaxy.html",
+    "cosmos.html",
+    "history.html",
+    "missions.html",
+    "server.js",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ]
+}

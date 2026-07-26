@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>宇宙简史 · 从大爆炸到黑洞</title>
+<meta name="description" content="3D 沉浸式滚动叙事：宇宙诞生、第一缕光、宇宙网、超新星、黑洞与暗能量。" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --gold: #f0c67e;
+    --gold-dim: rgba(240, 198, 126, 0.35);
+    --ink: #e8eaf2;
+    --ink-dim: rgba(232, 234, 242, 0.62);
+    --bg: #020308;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--ink); font-family: "Noto Sans SC", system-ui, sans-serif; overflow-x: hidden; }
+  #scene { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; }
+  .veil { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 55%, transparent 35%, rgba(2, 3, 8, 0.5) 100%); }
+  main { position: relative; z-index: 2; }
+
+  section { min-height: 110vh; display: flex; align-items: center; padding: 12vh 8vw; }
+  section:nth-of-type(even) { justify-content: flex-end; }
+
+  .card {
+    max-width: 560px;
+    background: rgba(7, 9, 20, 0.6);
+    border: 1px solid rgba(240, 198, 126, 0.16);
+    border-radius: 18px;
+    padding: 44px 48px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+    opacity: 0.35; transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  section.active .card { opacity: 1; transform: translateY(0); }
+  .kicker { font-size: 13px; letter-spacing: 0.35em; color: var(--gold); margin-bottom: 14px; }
+  h1, h2 { font-family: "Noto Serif SC", serif; }
+  h2 { font-size: clamp(26px, 3.2vw, 40px); line-height: 1.25; margin-bottom: 18px; }
+  .card p { font-size: 16.5px; line-height: 1.95; color: var(--ink-dim); margin-bottom: 12px; font-weight: 300; }
+  .card p strong, .card p em { color: var(--ink); font-style: normal; font-weight: 500; }
+  .card .fact {
+    margin-top: 18px; padding: 14px 18px; border-left: 2px solid var(--gold);
+    background: rgba(240, 198, 126, 0.07); font-size: 14.5px; line-height: 1.8;
+    color: var(--gold); border-radius: 0 10px 10px 0;
+  }
+
+  .hero { flex-direction: column; justify-content: center; text-align: center; align-items: center; }
+  .hero .kicker { letter-spacing: 0.5em; }
+  .hero h1 {
+    font-size: clamp(40px, 7vw, 88px); font-weight: 900; line-height: 1.15; margin: 18px 0 22px;
+    background: linear-gradient(160deg, #fff 30%, var(--gold) 75%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p { max-width: 620px; color: var(--ink-dim); font-size: 17px; line-height: 2; font-weight: 300; }
+  .cue { margin-top: 7vh; font-size: 12px; letter-spacing: 0.4em; color: var(--ink-dim); animation: bob 2.2s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+  .scale-tag {
+    position: fixed; left: 28px; bottom: 24px; z-index: 5;
+    font-size: 12.5px; letter-spacing: 0.2em; color: var(--ink-dim);
+    border: 1px solid rgba(240,198,126,0.2); border-radius: 999px;
+    padding: 8px 18px; background: rgba(7,9,20,0.55); backdrop-filter: blur(8px);
+  }
+  .scale-tag b { color: var(--gold); font-weight: 500; }
+
+  #voiceBtn {
+    position: fixed; right: 28px; bottom: 24px; z-index: 6;
+    font-family: inherit; font-size: 13px; letter-spacing: 0.15em;
+    color: var(--ink); background: rgba(7,9,20,0.7);
+    border: 1px solid rgba(240,198,126,0.35); border-radius: 999px;
+    padding: 10px 22px; cursor: pointer; backdrop-filter: blur(8px);
+    transition: all 0.3s;
+  }
+  #voiceBtn:hover { border-color: var(--gold); color: var(--gold); }
+  #voiceBtn.on { background: rgba(240,198,126,0.15); color: var(--gold); border-color: var(--gold); }
+
+  .label {
+    position: fixed; z-index: 3; pointer-events: none;
+    font-size: 12px; letter-spacing: 0.12em; color: var(--ink);
+    text-shadow: 0 0 8px rgba(0,0,0,0.9); white-space: nowrap;
+    transform: translate(-50%, -140%);
+    opacity: 0; transition: opacity 0.5s;
+  }
+  .label::after {
+    content: ""; position: absolute; left: 50%; top: 118%;
+    width: 1px; height: 14px; background: rgba(240,198,126,0.5);
+  }
+  .label b { color: var(--gold); font-weight: 500; }
+
+  nav#timeline {
+    position: fixed; right: 28px; top: 50%; transform: translateY(-50%);
+    z-index: 5; display: flex; flex-direction: column; gap: 18px;
+  }
+  nav#timeline a {
+    display: flex; align-items: center; gap: 10px; flex-direction: row-reverse;
+    text-decoration: none; color: var(--ink-dim); font-size: 12px; letter-spacing: 0.12em;
+    opacity: 0.55; transition: opacity 0.3s;
+  }
+  nav#timeline a .dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--gold-dim); background: transparent; transition: all 0.3s; flex: none; }
+  nav#timeline a.on { opacity: 1; color: var(--gold); }
+  nav#timeline a.on .dot { background: var(--gold); box-shadow: 0 0 12px var(--gold); }
+  nav#timeline a .lbl { opacity: 0; transform: translateX(6px); transition: all 0.3s; }
+  nav#timeline a:hover .lbl, nav#timeline a.on .lbl { opacity: 1; transform: translateX(0); }
+
+  #progressbar { position: fixed; top: 0; left: 0; height: 2px; width: 100%;
+    transform-origin: 0 50%; transform: scaleX(0);
+    background: linear-gradient(90deg, var(--gold), #ff9d5c); z-index: 10; }
+
+  footer { position: relative; z-index: 2; text-align: center; padding: 60px 20px 80px;
+    color: var(--ink-dim); font-size: 13px; letter-spacing: 0.15em; line-height: 2.2; }
+  footer .big { font-family: "Noto Serif SC", serif; font-size: clamp(20px, 2.6vw, 30px);
+    color: var(--ink); letter-spacing: 0.08em; margin-bottom: 16px; }
+  footer a { color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-dim); }
+
+  @media (max-width: 760px) {
+    section { padding: 14vh 6vw; justify-content: center !important; }
+    .card { padding: 32px 26px; }
+    nav#timeline { display: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div class="veil"></div>
+<div id="progressbar"></div>
+<div class="scale-tag" id="scaleTag">时间 · <b>138 亿年前</b></div>
+<button id="voiceBtn">🔊 开启配音解说</button>
+
+<nav id="timeline">
+  <a href="#c1" data-i="1"><span class="lbl">大爆炸</span><span class="dot"></span></a>
+  <a href="#c2" data-i="2"><span class="lbl">第一缕光</span><span class="dot"></span></a>
+  <a href="#c3" data-i="3"><span class="lbl">第一代恒星</span><span class="dot"></span></a>
+  <a href="#c4" data-i="4"><span class="lbl">宇宙网</span><span class="dot"></span></a>
+  <a href="#c5" data-i="5"><span class="lbl">超新星</span><span class="dot"></span></a>
+  <a href="#c6" data-i="6"><span class="lbl">黑洞</span><span class="dot"></span></a>
+  <a href="#c7" data-i="7"><span class="lbl">暗能量</span><span class="dot"></span></a>
+  <a href="#c8" data-i="8"><span class="lbl">宇宙的命运</span><span class="dot"></span></a>
+</nav>
+
+<main>
+  <section class="hero" id="hero" data-voice="欢迎来到宇宙简史。这一次，我们把时间拨回一百三十八亿年前，从宇宙诞生的第一瞬间开始，见证第一缕光、第一代恒星、绚丽的超新星爆发、深不见底的黑洞，直到宇宙最深处那个正在加速膨胀的谜。向下滚动，让我们从大爆炸开始。">
+    <div class="kicker">FROM THE BIG BANG TO BLACK HOLES</div>
+    <h1>宇宙简史<br />从大爆炸到黑洞</h1>
+    <p>上一站我们漫游了银河系。现在，把时间的指针拨到 138 亿年前——见证宇宙的诞生、第一缕光、恒星的生与死、时空的深渊，以及那个正在把宇宙推向加速膨胀的神秘力量。</p>
+    <div class="cue">SCROLL ▾</div>
+  </section>
+
+  <section id="c1" data-voice="第一章，大爆炸。一百三十八亿年前，整个宇宙从一个比原子还小的、炽热致密的点开始膨胀。注意，大爆炸不是在空间中的爆炸，而是空间本身的膨胀。在最初的一秒内，宇宙经历了疯狂的暴胀，尺寸放大了至少十的二十六次方倍。夸克结合成质子和中子，再聚变成氢和氦的原子核。宇宙中百分之九十二的氢原子，都诞生于那最初的三分钟。">
+    <div class="card">
+      <div class="kicker">CHAPTER 01 · 时间 0</div>
+      <h2>大爆炸：空间本身的膨胀</h2>
+      <p>138 亿年前，可观测宇宙压缩在一个比原子还小的炽热致密状态中，然后<strong>开始膨胀</strong>。大爆炸不是物质在既有空间中的爆炸，而是<em>空间本身在膨胀</em>——每一个点都在远离其他所有点。</p>
+      <p>开赛后 10⁻³² 秒，宇宙经历"暴胀"，尺寸瞬间放大至少 10²⁶ 倍；3 分钟内，夸克拼成质子和中子，再聚变成氢、氦原子核——<strong>今天宇宙中 92% 的原子核，都诞生于那三分钟</strong>。</p>
+      <div class="fact">"大爆炸"这个名字其实来自反对者霍伊尔的嘲讽，但宇宙膨胀的证据（哈勃红移）让它成为科学共识。</div>
+    </div>
+  </section>
+
+  <section id="c2" data-voice="第二章，第一缕光。大爆炸后的三十八万年里，宇宙是一锅不透明的等离子体浓汤，光子被自由电子反复散射，寸步难行。直到温度降到三千开尔文，电子被原子核俘获，形成中性原子，光子才终于获得自由，向四面八方飞散。这束宇宙的第一缕光，至今仍在宇宙中穿行，只是被膨胀拉伸成了微波，温度只剩二点七开尔文，这就是宇宙微波背景辐射，我们能拍到的最古老的宇宙照片。">
+    <div class="card">
+      <div class="kicker">CHAPTER 02 · 38 万年</div>
+      <h2>第一缕光：宇宙微波背景辐射</h2>
+      <p>大爆炸后 38 万年，宇宙冷却到约 3000 K，电子终于被原子核俘获形成中性原子。原本被反复散射的光子<em>瞬间获得自由</em>——宇宙从不透明变得透明，发出了它的第一缕光。</p>
+      <p>这束光至今仍在飞行，被 138 亿年的空间膨胀从可见光拉伸成微波，温度只剩 <strong>2.725 K</strong>。它就是<strong>宇宙微波背景辐射（CMB）</strong>——婴儿宇宙的"照片"，1965 年被意外发现。</p>
+      <div class="fact">CMB 上十万分之一量级的温度涨落（图中的红蓝斑点），正是后来所有星系、星系团的种子。</div>
+    </div>
+  </section>
+
+  <section id="c3" data-voice="第三章，第一代恒星。第一缕光之后，宇宙进入了长达两亿年的黑暗时代，没有任何恒星，只有氢和氦的气体在引力的牵引下缓缓聚集。终于，在密度足够高的地方，气体坍缩、点燃，诞生了宇宙的第一代恒星。它们比太阳大几十甚至几百倍，燃烧猛烈而短命，只存在几百万年就以超新星结束一生。它们的星光驱散了黑暗，让宇宙重新变得透明，这个时期叫再电离。">
+    <div class="card">
+      <div class="kicker">CHAPTER 03 · 2 亿年</div>
+      <h2>黑暗时代之后：第一代恒星点燃</h2>
+      <p>第一缕光之后，宇宙陷入长达约 2 亿年的<strong>黑暗时代</strong>——没有恒星，只有氢氦气体在暗物质引力骨架上缓缓聚集。</p>
+      <p>终于，气体在致密处坍缩点燃：<em>第一代恒星（第三星族星）</em>诞生。它们质量可达太阳的数百倍，炽热、耀眼、短命，几百万年后便爆炸死亡。它们的紫外辐射把周围气体重新电离——宇宙"再电离"，黑暗时代结束。</p>
+      <div class="fact">第一代恒星是宇宙中第一批"元素工厂"：碳、氧、铁等比氦重的元素，从它们开始才存在。</div>
+    </div>
+  </section>
+
+  <section id="c4" data-voice="第四章，宇宙网。把视野放大到数亿光年，你会发现星系并不是均匀分布的。引力像一位耐心的雕塑家，把大爆炸留下的微小密度涨落不断放大，经过上百亿年，编织出一张宏伟的宇宙网，发光的星系沿着纤维状的暗物质骨架聚集，纤维交汇处是巨大的星系团，而纤维之间，是直径数亿光年、几乎空无一物的宇宙空洞。我们的银河系，就坐落在一条不起眼的纤维末梢上。">
+    <div class="card">
+      <div class="kicker">CHAPTER 04 · 百亿年雕琢</div>
+      <h2>宇宙网：引力的百亿年雕刻</h2>
+      <p>放大到数亿光年：星系并非均匀散布，而是沿着暗物质骨架聚集成<strong>纤维状结构</strong>，交汇处是包含数千个星系的星系团，纤维之间是直径数亿光年、近乎空无一物的<em>宇宙空洞</em>。</p>
+      <p>这张"宇宙网"的每一根纤维，都源自 CMB 里那些十万分之一量级的微小涨落——引力用一百多亿年，把量子尺度的涟漪雕刻成了宇宙最大的结构。</p>
+      <div class="fact">已知最大的结构"武仙-北冕座长城"绵延 100 亿光年。银河系只是宇宙网末梢纤维上的一个小光点。</div>
+    </div>
+  </section>
+
+  <section id="c5" data-voice="第五章，超新星，恒星之死。大质量恒星燃烧殆尽时，核聚变停止，核心失去支撑，在一秒钟内坍缩成中子星，外层物质以每秒上万公里的速度反弹炸开，这就是超新星爆发。那一瞬间的亮度，可以超过整个星系。我们身体里的碳和氧，骨骼里的钙，血液中的铁，首饰里的金，全部来自这样的恒星熔炉和它们的死亡爆炸。我们就是星尘。而核心里留下的，可能是一颗每秒钟旋转几百圈的中子星，或者一个黑洞。">
+    <div class="card">
+      <div class="kicker">CHAPTER 05 · 恒星之死</div>
+      <h2>超新星：宇宙最绚烂的葬礼</h2>
+      <p>大质量恒星燃料耗尽时，核心在不到一秒内坍缩，外层物质以每秒上万公里的速度炸开——<strong>超新星</strong>爆发瞬间的亮度可超过整个星系。</p>
+      <p>你身体里的碳和氧、骨骼里的钙、血液里的铁、首饰里的金，<em>全部诞生于恒星熔炉与超新星爆炸</em>。正如萨根所说："我们就是星尘。"</p>
+      <p>爆炸后的核心留下两种遗骸：小于约 3 倍太阳质量的成为<strong>中子星</strong>（一茶匙物质重达十亿吨）；更大的则坍缩成黑洞。</p>
+      <div class="fact">1987A 超新星爆发时，地球上的中微子探测器比光学望远镜提前 3 小时"看见"了它——中微子从核心直接逃出。</div>
+    </div>
+  </section>
+
+  <section id="c6" data-voice="第六章，黑洞，时空的深渊。当核心质量超过极限，没有任何力量能抵抗引力，物质被压缩进一个无限小的奇点，周围形成一个有去无回的边界，事件视界。哪怕光也无法从中逃脱。黑洞不吸血，也不吞噬一切，它只是引力太强。如果太阳变成黑洞，地球会照样绕它公转，只是永远陷入黑夜。黑洞周围的吸积盘被摩擦加热到数百万度，比任何恒星表面都亮。二零一五年，人类首次探测到两个黑洞合并产生的引力波，时空本身的涟漪。二零一九年，我们又拍下了黑洞的第一张照片。">
+    <div class="card">
+      <div class="kicker">CHAPTER 06 · 时空的深渊</div>
+      <h2>黑洞：连光也无法逃脱的边界</h2>
+      <p>当核心坍缩无可阻挡，物质被压进无限致密的奇点，周围形成<strong>事件视界</strong>——一个"有去无回"的边界，连光也无法逃脱。视界内，时间的方向指向奇点，正如视界外时间指向未来。</p>
+      <p>黑洞并不是宇宙吸尘器：<em>若太阳变成黑洞，地球会照常公转，只是陷入永夜</em>。而吞噬物质的吸积盘被摩擦加热到数百万度，让黑洞周围成为宇宙中最亮的地方之一。</p>
+      <p>在视界附近，时间流逝显著变慢——《星际穿越》里的一小时等于外界七年，是严格的广义相对论计算。</p>
+      <div class="fact">2015 年 LIGO 首次探测到双黑洞合并的引力波；2019 年事件视界望远镜发布了 M87* 的首张黑洞照片。</div>
+    </div>
+  </section>
+
+  <section id="c7" data-voice="第七章，暗物质与暗能量。你可能以为，我们已经了解了宇宙。但真相是，我们能看见的所有恒星、星系、气体，加起来只占宇宙的百分之五。百分之二十七是暗物质，它不发光，却用引力把星系黏合在一起。剩下百分之六十八是暗能量，它更诡异，它是一种让空间本身加速膨胀的神秘力量。一九九八年，天文学家通过观测遥远的超新星发现，宇宙的膨胀不但没有减速，反而在加速。这意味着，遥远的星系正在以越来越快的速度离我们而去，最终，它们的光将永远无法到达地球。">
+    <div class="card">
+      <div class="kicker">CHAPTER 07 · 宇宙的 95%</div>
+      <h2>暗物质与暗能量：看不见的宇宙</h2>
+      <p>我们能看见的一切——恒星、星系、气体——只占宇宙的 <strong>5%</strong>。约 <strong>27% 是暗物质</strong>：不发光、不与光作用，却用引力编织出宇宙网、把高速旋转的星系"黏"住不散架。</p>
+      <p>剩下约 <strong>68% 是暗能量</strong>：1998 年，天文学家通过遥远超新星发现宇宙膨胀<em>不但没减速，反而在加速</em>——仿佛空间本身带着一种排斥力。这项发现获得了 2011 年诺贝尔物理学奖。</p>
+      <div class="fact">由于加速膨胀，遥远星系的光将永远无法到达我们。可观测宇宙的边界，正在把越来越多的星系"关在门外"。</div>
+    </div>
+  </section>
+
+  <section id="c8" data-voice="终章，宇宙的命运。如果暗能量保持现在的强度，宇宙将永远加速膨胀下去。星系将一个个消失在视界之外，恒星将燃尽，黑洞将蒸发，最终，宇宙会进入一片寒冷、黑暗、接近绝对零度的热寂。这听起来有些悲伤，但请记住，我们正生活在宇宙历史上最璀璨的年代，恒星光芒万丈，星系处处可见，生命得以存在。我们，是宇宙用来认识自己的方式。旅程到此结束，感谢你的陪伴。">
+    <div class="card">
+      <div class="kicker">FINAL CHAPTER · 未来</div>
+      <h2>宇宙的命运：走向热寂</h2>
+      <p>若暗能量维持现状，宇宙将永远加速膨胀：星系相继滑出视界，恒星在约 100 万亿年后全部燃尽，黑洞经霍金辐射在 10¹⁰⁰ 年内蒸发殆尽——最终只剩接近绝对零度的稀薄粒子，即<strong>热寂</strong>。</p>
+      <p>但若暗能量增强，宇宙可能在"大撕裂"中连原子都被撕碎；它究竟是什么，<em>仍是当代物理学最大的谜题之一</em>。</p>
+      <p>无需伤感：我们恰好生活在宇宙最璀璨的年代——恒星闪耀、星系可见、生命得以存在。<strong>我们是宇宙认识自己的方式。</strong></p>
+      <div class="fact">从大爆炸到热寂：138 亿年的宇宙史中，适合生命与文明的"恒星时代"只占不到 0.0001%——而我们就在其中。</div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="big">我们是星尘，也是宇宙凝望自身的眼睛</div>
+    大爆炸 → 第一缕光 → 第一代恒星 → 宇宙网 → 超新星 → 黑洞 → 暗能量 → 热寂<br />
+    <a href="index.html">太阳系黄道面</a> · <a href="galaxy.html">银河漫游</a> · <a href="history.html">下一站：探索宇宙的历史 →</a>
+  </footer>
+</main>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from "three";
+
+const canvas = document.getElementById("scene");
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+} catch (e) {
+  const d = document.createElement("div");
+  d.style.cssText = "position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px;color:#e8eaf2;background:#020308;font-size:15px;line-height:2";
+  d.textContent = "当前浏览器不支持 WebGL，无法渲染 3D 场景。请使用较新的 Chrome / Edge / Safari 并确保已开启硬件加速。";
+  document.body.appendChild(d);
+  throw e;
+}
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x020308);
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.01, 3000);
+
+function makeGlowTexture() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 64;
+  const g = c.getContext("2d");
+  const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, "rgba(255,255,255,1)");
+  grad.addColorStop(0.35, "rgba(255,255,255,0.5)");
+  grad.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+}
+const glowTex = makeGlowTexture();
+
+function gauss() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const smooth01 = (t) => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
+const fade = (s, a, b, c, d) => smooth01((s - a) / (b - a)) * (1 - smooth01((s - c) / (d - c)));
+
+function pointsFromArrays(pos, col, size, opacity) {
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  if (col) geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+  const mat = new THREE.PointsMaterial({
+    size, map: glowTex, transparent: true, depthWrite: false,
+    blending: THREE.AdditiveBlending, opacity: opacity == null ? 1 : opacity
+  });
+  if (col) mat.vertexColors = true;
+  return new THREE.Points(geo, mat);
+}
+
+function buildBgStars(count) {
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const r = 200 + Math.random() * 400;
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(2 * Math.random() - 1);
+    pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+    pos[i * 3 + 1] = r * Math.cos(ph);
+    pos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
+  }
+  return pointsFromArrays(pos, null, 0.7, 0.5);
+}
+const bgStars = buildBgStars(1200);
+bgStars.material.color = new THREE.Color(0xaab4dd);
+scene.add(bgStars);
+
+const bangN = 16000;
+const bangDir = new Float32Array(bangN * 3);
+const bangSpd = new Float32Array(bangN);
+const bangCol = new Float32Array(bangN * 3);
+const bangPos = new Float32Array(bangN * 3);
+{
+  const cHot = new THREE.Color(0xfff6e0), cMid = new THREE.Color(0xffb060), cCool = new THREE.Color(0x7a9aff);
+  for (let i = 0; i < bangN; i++) {
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(2 * Math.random() - 1);
+    bangDir[i * 3] = Math.sin(ph) * Math.cos(th);
+    bangDir[i * 3 + 1] = Math.cos(ph);
+    bangDir[i * 3 + 2] = Math.sin(ph) * Math.sin(th);
+    bangSpd[i] = Math.pow(Math.random(), 0.7);
+    const t = bangSpd[i];
+    const c = t < 0.4 ? cHot.clone().lerp(cMid, t / 0.4) : cMid.clone().lerp(cCool, (t - 0.4) / 0.6);
+    bangCol[i * 3] = c.r; bangCol[i * 3 + 1] = c.g; bangCol[i * 3 + 2] = c.b;
+  }
+}
+const bangGeo = new THREE.BufferGeometry();
+bangGeo.setAttribute("position", new THREE.BufferAttribute(bangPos, 3));
+bangGeo.setAttribute("color", new THREE.BufferAttribute(bangCol, 3));
+const bangPts = new THREE.Points(bangGeo, new THREE.PointsMaterial({
+  size: 0.12, map: glowTex, vertexColors: true, transparent: true,
+  depthWrite: false, blending: THREE.AdditiveBlending
+}));
+scene.add(bangPts);
+const bangCore = pointsFromArrays(new Float32Array([0, 0, 0]), null, 3, 1);
+bangCore.material.color = new THREE.Color(0xfff8e8);
+scene.add(bangCore);
+
+const cmbN = 12000;
+const cmbPos = new Float32Array(cmbN * 3);
+const cmbCol = new Float32Array(cmbN * 3);
+for (let i = 0; i < cmbN; i++) {
+  const th = Math.random() * Math.PI * 2;
+  const ph = Math.acos(2 * Math.random() - 1);
+  const r = 40;
+  cmbPos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+  cmbPos[i * 3 + 1] = r * Math.cos(ph);
+  cmbPos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
+  const warm = Math.random() > 0.5;
+  const d = 0.4 + Math.random() * 0.6;
+  cmbCol[i * 3] = warm ? 1.0 * d : 0.45 * d;
+  cmbCol[i * 3 + 1] = warm ? 0.55 * d : 0.6 * d;
+  cmbCol[i * 3 + 2] = warm ? 0.35 * d : 1.0 * d;
+}
+const cmbPts = pointsFromArrays(cmbPos, cmbCol, 0.35, 0);
+scene.add(cmbPts);
+
+const starN = 2500;
+const starPos = new Float32Array(starN * 3);
+const starCol = new Float32Array(starN * 3);
+const starSeed = new Float32Array(starN);
+for (let i = 0; i < starN; i++) {
+  const r = Math.pow(Math.random(), 0.5) * 16;
+  const th = Math.random() * Math.PI * 2;
+  const ph = Math.acos(2 * Math.random() - 1);
+  starPos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+  starPos[i * 3 + 1] = r * Math.cos(ph);
+  starPos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
+  const big = Math.random() < 0.06;
+  const d = big ? 1 : 0.35 + Math.random() * 0.5;
+  starCol[i * 3] = 0.75 * d; starCol[i * 3 + 1] = 0.85 * d; starCol[i * 3 + 2] = 1.0 * d;
+  starSeed[i] = Math.random();
+}
+const firstStars = pointsFromArrays(starPos, starCol, 0.28, 0);
+scene.add(firstStars);
+
+const webGroup = new THREE.Group();
+{
+  const nodes = [];
+  for (let f = 0; f < 7; f++) {
+    const baseTh = (f / 7) * Math.PI * 2;
+    const basePh = Math.PI * (0.2 + Math.random() * 0.6);
+    let prev = null;
+    for (let sgm = 0; sgm <= 6; sgm++) {
+      const t = sgm / 6;
+      const r = 4 + t * 11 + gauss() * 0.8;
+      const th = baseTh + t * 0.9 + gauss() * 0.15;
+      const ph = basePh + gauss() * 0.12;
+      const p = new THREE.Vector3(
+        r * Math.sin(ph) * Math.cos(th),
+        r * Math.cos(ph) * 0.7,
+        r * Math.sin(ph) * Math.sin(th)
+      );
+      nodes.push(p);
+      if (prev) {
+        const lineGeo = new THREE.BufferGeometry().setFromPoints([prev, p]);
+        webGroup.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({
+          color: 0x8a7ad0, transparent: true, opacity: 0.25
+        })));
+      }
+      prev = p;
+    }
+  }
+  const webN = 6000;
+  const wPos = new Float32Array(webN * 3);
+  const wCol = new Float32Array(webN * 3);
+  for (let i = 0; i < webN; i++) {
+    const n = nodes[Math.floor(Math.random() * nodes.length)];
+    wPos[i * 3] = n.x + gauss() * 0.7;
+    wPos[i * 3 + 1] = n.y + gauss() * 0.7;
+    wPos[i * 3 + 2] = n.z + gauss() * 0.7;
+    const d = 0.3 + Math.random() * 0.7;
+    wCol[i * 3] = 1.0 * d; wCol[i * 3 + 1] = 0.85 * d; wCol[i * 3 + 2] = 0.6 * d;
+  }
+  const webPts = pointsFromArrays(wPos, wCol, 0.16, 1);
+  webGroup.add(webPts);
+  webGroup.traverse((o) => { if (o.material) o.material.transparent = true; });
+}
+webGroup.visible = false;
+scene.add(webGroup);
+
+const snGroup = new THREE.Group();
+{
+  const snN = 4000;
+  const snPos = new Float32Array(snN * 3);
+  const snCol = new Float32Array(snN * 3);
+  const cIn = new THREE.Color(0xfff2d0), cOut = new THREE.Color(0xff7a4a);
+  for (let i = 0; i < snN; i++) {
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(2 * Math.random() - 1);
+    snPos[i * 3] = Math.sin(ph) * Math.cos(th);
+    snPos[i * 3 + 1] = Math.cos(ph);
+    snPos[i * 3 + 2] = Math.sin(ph) * Math.sin(th);
+    const t = Math.random();
+    const c = cIn.clone().lerp(cOut, t);
+    snCol[i * 3] = c.r; snCol[i * 3 + 1] = c.g; snCol[i * 3 + 2] = c.b;
+  }
+  const ejecta = pointsFromArrays(snPos, snCol, 0.14, 0.9);
+  ejecta.name = "ejecta";
+  snGroup.add(ejecta);
+  const flash = pointsFromArrays(new Float32Array([0, 0, 0]), null, 6, 1);
+  flash.material.color = new THREE.Color(0xfffbe8);
+  flash.name = "flash";
+  snGroup.add(flash);
+  const shell = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 24, 18),
+    new THREE.MeshBasicMaterial({ color: 0xffc080, wireframe: true, transparent: true, opacity: 0.25 })
+  );
+  shell.name = "shell";
+  snGroup.add(shell);
+}
+snGroup.visible = false;
+scene.add(snGroup);
+
+const bhGroup = new THREE.Group();
+let bhDisk, bhJets;
+{
+  const diskN = 7000;
+  const dPos = new Float32Array(diskN * 3);
+  const dCol = new Float32Array(diskN * 3);
+  const dRad = new Float32Array(diskN);
+  const dAng = new Float32Array(diskN);
+  const cIn = new THREE.Color(0xfff0c0), cOut = new THREE.Color(0xc04a20);
+  for (let i = 0; i < diskN; i++) {
+    const r = 1.6 + Math.pow(Math.random(), 1.4) * 4.5;
+    dRad[i] = r;
+    dAng[i] = Math.random() * Math.PI * 2;
+    const t = (r - 1.6) / 4.5;
+    const c = cIn.clone().lerp(cOut, t);
+    const d = 0.5 + Math.random() * 0.5;
+    dCol[i * 3] = c.r * d; dCol[i * 3 + 1] = c.g * d; dCol[i * 3 + 2] = c.b * d;
+  }
+  const dGeo = new THREE.BufferGeometry();
+  dGeo.setAttribute("position", new THREE.BufferAttribute(dPos, 3));
+  dGeo.setAttribute("color", new THREE.BufferAttribute(dCol, 3));
+  bhDisk = new THREE.Points(dGeo, new THREE.PointsMaterial({
+    size: 0.1, map: glowTex, vertexColors: true, transparent: true,
+    depthWrite: false, blending: THREE.AdditiveBlending
+  }));
+  bhDisk.userData = { dRad, dAng };
+  bhGroup.add(bhDisk);
+
+  const black = new THREE.Mesh(
+    new THREE.SphereGeometry(1.35, 32, 24),
+    new THREE.MeshBasicMaterial({ color: 0x000000 })
+  );
+  bhGroup.add(black);
+  const ringGeo = new THREE.RingGeometry(1.38, 1.62, 64);
+  const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({
+    color: 0xffe0a0, transparent: true, opacity: 0.8, side: THREE.DoubleSide
+  }));
+  bhGroup.add(ring);
+
+  const jetN = 900;
+  const jPos = new Float32Array(jetN * 3);
+  const jSeed = new Float32Array(jetN);
+  for (let i = 0; i < jetN; i++) {
+    jSeed[i] = Math.random();
+  }
+  const jGeo = new THREE.BufferGeometry();
+  jGeo.setAttribute("position", new THREE.BufferAttribute(jPos, 3));
+  bhJets = new THREE.Points(jGeo, new THREE.PointsMaterial({
+    size: 0.08, map: glowTex, color: 0x9ab8ff, transparent: true, opacity: 0.7,
+    depthWrite: false, blending: THREE.AdditiveBlending
+  }));
+  bhJets.userData = { jSeed };
+  bhGroup.add(bhJets);
+}
+bhGroup.visible = false;
+bhGroup.rotation.x = 0.5;
+scene.add(bhGroup);
+
+const deGroup = new THREE.Group();
+{
+  const gN = 260;
+  const gPos = new Float32Array(gN * 3);
+  for (let i = 0; i < gN; i++) {
+    gPos[i * 3] = (Math.random() - 0.5) * 24;
+    gPos[i * 3 + 1] = (Math.random() - 0.5) * 14;
+    gPos[i * 3 + 2] = (Math.random() - 0.5) * 24;
+  }
+  const gPts = pointsFromArrays(gPos, null, 0.5, 0.9);
+  gPts.material.color = new THREE.Color(0xcfd8ff);
+  deGroup.add(gPts);
+  const grid = new THREE.GridHelper(30, 12, 0x6a5ad0, 0x3a3480);
+  grid.material.transparent = true;
+  grid.material.opacity = 0.25;
+  deGroup.add(grid);
+}
+deGroup.visible = false;
+scene.add(deGroup);
+
+const fateN = 200;
+const fatePos = new Float32Array(fateN * 3);
+for (let i = 0; i < fateN; i++) {
+  const r = 6 + Math.random() * 14;
+  const th = Math.random() * Math.PI * 2;
+  const ph = Math.acos(2 * Math.random() - 1);
+  fatePos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+  fatePos[i * 3 + 1] = r * Math.cos(ph);
+  fatePos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
+}
+const fatePts = pointsFromArrays(fatePos, null, 0.25, 0);
+fatePts.material.color = new THREE.Color(0x5a6a9a);
+scene.add(fatePts);
+
+const keys = [
+  { pos: [0, 1.5, 9], look: [0, 0, 0], time: "138 亿年前" },
+  { pos: [0, 0.6, 7], look: [0, 0, 0], time: "0 → 3 分钟" },
+  { pos: [0, 0.5, 2], look: [0, 0.3, -10], time: "38 万年" },
+  { pos: [0, 3, 17], look: [0, 0, 0], time: "2 亿年" },
+  { pos: [13, 7, 20], look: [0, 0, 0], time: "百亿年" },
+  { pos: [0, 2.5, 11], look: [0, 0, 0], time: "恒星之死" },
+  { pos: [7, 3.5, 9], look: [0, 0, 0], time: "事件视界" },
+  { pos: [0, 9, 24], look: [0, 0, 0], time: "现在 · 加速膨胀" },
+  { pos: [0, 2, 18], look: [0, 0, 0], time: "10¹⁰⁰ 年后" }
+];
+
+let stage = 0;
+function computeStage() {
+  const doc = document.documentElement;
+  const max = doc.scrollHeight - innerHeight;
+  const p = max > 0 ? scrollY / max : 0;
+  stage = clamp(p * (keys.length + 1) - 0.6, 0, keys.length - 1 + 0.4);
+  document.getElementById("progressbar").style.transform = "scaleX(" + p + ")";
+  const idx = clamp(Math.round(stage), 0, keys.length - 1);
+  document.getElementById("scaleTag").innerHTML = "时间 · <b>" + keys[idx].time + "</b>";
+}
+addEventListener("scroll", computeStage, { passive: true });
+computeStage();
+
+const labels = [
+  { el: null, text: "<b>暴胀</b> · 10⁻³² 秒", pos: new THREE.Vector3(0, 2.5, 0), range: [0.6, 1.6] },
+  { el: null, text: "<b>CMB</b> · 2.725 K 余晖", pos: new THREE.Vector3(0, 6, -8), range: [1.6, 2.6] },
+  { el: null, text: "<b>第三星族星</b>", pos: new THREE.Vector3(3, 3, -2), range: [2.4, 3.5] },
+  { el: null, text: "<b>纤维结构</b> + 宇宙空洞", pos: new THREE.Vector3(6, 4, 0), range: [3.4, 4.5] },
+  { el: null, text: "<b>冲击波</b> 10,000 km/s", pos: new THREE.Vector3(0, 3.5, 0), range: [4.4, 5.5] },
+  { el: null, text: "<b>事件视界</b>", pos: new THREE.Vector3(0, 2.2, 0), range: [5.4, 6.5] },
+  { el: null, text: "<b>暗能量</b> 68%", pos: new THREE.Vector3(0, 5, 0), range: [6.4, 7.5] },
+  { el: null, text: "<b>热寂</b> · 绝对零度", pos: new THREE.Vector3(0, 3, 0), range: [7.4, 9] }
+];
+labels.forEach((l) => {
+  const d = document.createElement("div");
+  d.className = "label";
+  d.innerHTML = l.text;
+  document.body.appendChild(d);
+  l.el = d;
+});
+
+const sections = document.querySelectorAll("section[id^='c']");
+const links = document.querySelectorAll("nav#timeline a");
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((e) => {
+    if (e.isIntersecting) {
+      sections.forEach((s) => s.classList.toggle("active", s === e.target));
+      links.forEach((l) => l.classList.toggle("on", l.getAttribute("href") === "#" + e.target.id));
+      const v = e.target.dataset.voice;
+      if (v) speak(v);
+    }
+  });
+}, { threshold: 0.45 });
+sections.forEach((s) => io.observe(s));
+io.observe(document.getElementById("hero"));
+
+let voiceOn = false;
+const voiceBtn = document.getElementById("voiceBtn");
+function speak(text) {
+  if (!voiceOn || !("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "zh-CN";
+  u.rate = 0.95;
+  u.pitch = 1;
+  const voices = speechSynthesis.getVoices();
+  const zh = voices.find((v) => v.lang.replace("_", "-").startsWith("zh"));
+  if (zh) u.voice = zh;
+  speechSynthesis.speak(u);
+}
+voiceBtn.addEventListener("click", () => {
+  voiceOn = !voiceOn;
+  voiceBtn.classList.toggle("on", voiceOn);
+  voiceBtn.textContent = voiceOn ? "🔇 关闭配音解说" : "🔊 开启配音解说";
+  if (voiceOn) {
+    const active = document.querySelector("section.active") || document.getElementById("hero");
+    speak(active.dataset.voice || "");
+  } else {
+    speechSynthesis.cancel();
+  }
+});
+if ("speechSynthesis" in window) speechSynthesis.getVoices();
+
+const v3a = new THREE.Vector3(), v3b = new THREE.Vector3();
+const curPos = new THREE.Vector3().fromArray(keys[0].pos);
+const curLook = new THREE.Vector3().fromArray(keys[0].look);
+
+function setGroupOpacity(group, o) {
+  group.visible = o > 0.01;
+  group.traverse((obj) => { if (obj.material) obj.material.opacity = (obj.name === "shell" ? 0.25 : obj.userData.baseOpacity != null ? obj.userData.baseOpacity : 1) * o; });
+}
+webGroup.traverse((o) => { if (o.material) o.userData.baseOpacity = o.material.opacity; });
+deGroup.traverse((o) => { if (o.material) o.userData.baseOpacity = o.material.opacity; });
+
+function frame(now) {
+  const t = now / 1000;
+
+  const s = clamp(stage, 0, keys.length - 1);
+  const i = Math.floor(s);
+  const j = Math.min(i + 1, keys.length - 1);
+  const f = smooth01(s - i);
+  v3a.fromArray(keys[i].pos).lerp(v3b.fromArray(keys[j].pos), f);
+  const lx = keys[i].look[0] + (keys[j].look[0] - keys[i].look[0]) * f;
+  const ly = keys[i].look[1] + (keys[j].look[1] - keys[i].look[1]) * f;
+  const lz = keys[i].look[2] + (keys[j].look[2] - keys[i].look[2]) * f;
+  v3a.x += Math.sin(t * 0.3) * 0.08;
+  v3a.y += Math.cos(t * 0.22) * 0.06;
+  curPos.lerp(v3a, 0.06);
+  curLook.lerp(new THREE.Vector3(lx, ly, lz), 0.06);
+  camera.position.copy(curPos);
+  camera.lookAt(curLook);
+
+  const bangO = fade(stage, 0, 0.4, 1.5, 2.1);
+  const bangExp = 0.15 + smooth01((stage - 0.1) / 1.3) * 16;
+  {
+    const p = bangGeo.attributes.position.array;
+    for (let k = 0; k < bangN; k++) {
+      const r = bangExp * bangSpd[k] + 0.05;
+      p[k * 3] = bangDir[k * 3] * r;
+      p[k * 3 + 1] = bangDir[k * 3 + 1] * r;
+      p[k * 3 + 2] = bangDir[k * 3 + 2] * r;
+    }
+    bangGeo.attributes.position.needsUpdate = true;
+    bangPts.material.opacity = bangO;
+    bangPts.visible = bangO > 0.01;
+    bangCore.material.opacity = bangO * (1.5 - bangExp / 16);
+    bangCore.visible = bangO > 0.01;
+  }
+
+  const cmbO = fade(stage, 1.3, 2.0, 2.5, 3.1);
+  cmbPts.material.opacity = cmbO * 0.85;
+  cmbPts.visible = cmbO > 0.01;
+  cmbPts.rotation.y = t * 0.02;
+
+  const stO = fade(stage, 2.2, 3.0, 3.4, 4.1);
+  firstStars.material.opacity = stO * (0.6 + 0.4 * Math.sin(t * 2) * 0.3 + 0.2);
+  firstStars.visible = stO > 0.01;
+  firstStars.rotation.y = t * 0.01;
+
+  const webO = fade(stage, 3.2, 4.0, 4.4, 5.1);
+  setGroupOpacity(webGroup, webO);
+  webGroup.rotation.y = t * 0.02;
+
+  const snO = fade(stage, 4.2, 4.9, 5.4, 6.1);
+  if (snO > 0.01) {
+    const cyc = ((t * 0.5) % 1);
+    const expR = 0.3 + cyc * 7;
+    const shellMesh = snGroup.getObjectByName("shell");
+    const flashPt = snGroup.getObjectByName("flash");
+    const ej = snGroup.getObjectByName("ejecta");
+    shellMesh.scale.setScalar(expR);
+    shellMesh.userData.baseOpacity = 0.25 * (1 - cyc);
+    flashPt.userData.baseOpacity = Math.max(0, 1 - cyc * 2.5);
+    flashPt.material.size = 4 + cyc * 5;
+    ej.scale.setScalar(0.2 + cyc * 5.5);
+    ej.userData.baseOpacity = 0.9 * (1 - cyc * 0.7);
+    setGroupOpacity(snGroup, snO);
+  } else {
+    snGroup.visible = false;
+  }
+
+  const bhO = fade(stage, 5.2, 5.9, 6.4, 7.1);
+  if (bhO > 0.01) {
+    const { dRad, dAng } = bhDisk.userData;
+    const p = bhDisk.geometry.attributes.position.array;
+    for (let k = 0; k < dRad.length; k++) {
+      const a = dAng[k] + t * (2.2 / Math.pow(dRad[k], 1.5));
+      p[k * 3] = Math.cos(a) * dRad[k];
+      p[k * 3 + 1] = Math.sin(a * 7.3 + dRad[k]) * 0.06;
+      p[k * 3 + 2] = Math.sin(a) * dRad[k];
+    }
+    bhDisk.geometry.attributes.position.needsUpdate = true;
+    const jp = bhJets.geometry.attributes.position.array;
+    const { jSeed } = bhJets.userData;
+    for (let k = 0; k < jSeed.length; k++) {
+      const prog = (jSeed[k] + t * 0.35) % 1;
+      const dirn = k % 2 === 0 ? 1 : -1;
+      const spread = 0.15 + prog * 0.5;
+      jp[k * 3] = gauss() * spread * 0.3;
+      jp[k * 3 + 1] = dirn * (1.2 + prog * 8);
+      jp[k * 3 + 2] = gauss() * spread * 0.3;
+    }
+    bhJets.geometry.attributes.position.needsUpdate = true;
+    setGroupOpacity(bhGroup, bhO);
+  } else {
+    bhGroup.visible = false;
+  }
+
+  const deO = fade(stage, 6.2, 6.9, 7.4, 8.1);
+  setGroupOpacity(deGroup, deO);
+  if (deO > 0.01) {
+    const expand = 1 + ((t * 0.12) % 0.5);
+    deGroup.scale.setScalar(expand);
+  }
+
+  const fateO = fade(stage, 7.2, 7.9, 8.6, 9.2);
+  fatePts.material.opacity = fateO * (0.35 + 0.25 * Math.sin(t * 0.7));
+  fatePts.visible = fateO > 0.01;
+
+  labels.forEach((l) => {
+    const inRange = stage >= l.range[0] && stage <= l.range[1];
+    if (!inRange) { l.el.style.opacity = 0; return; }
+    const p = l.pos.clone().project(camera);
+    if (p.z > 1) { l.el.style.opacity = 0; return; }
+    l.el.style.left = (p.x * 0.5 + 0.5) * innerWidth + "px";
+    l.el.style.top = (-p.y * 0.5 + 0.5) * innerHeight + "px";
+    l.el.style.opacity = 1;
+  });
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

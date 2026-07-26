@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>黄道面之谜 · 太阳系为何是一个平面</title>
+<meta name="description" content="沉浸式滚动叙事：从太阳星云到原行星盘，解释太阳系黄道面的形成。" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@600;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --gold: #f0c67e;
+    --gold-dim: rgba(240, 198, 126, 0.35);
+    --ink: #e8eaf2;
+    --ink-dim: rgba(232, 234, 242, 0.62);
+    --bg: #05060f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Noto Sans SC", system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+  #space {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+  }
+  .veil {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 60%, transparent 30%, rgba(5, 6, 15, 0.55) 100%);
+  }
+  main { position: relative; z-index: 2; }
+
+  section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 12vh 8vw;
+  }
+  section:nth-of-type(even) { justify-content: flex-end; }
+
+  .card {
+    max-width: 560px;
+    background: rgba(10, 13, 28, 0.62);
+    border: 1px solid rgba(240, 198, 126, 0.16);
+    border-radius: 18px;
+    padding: 44px 48px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+    opacity: 0.35;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  section.active .card { opacity: 1; transform: translateY(0); }
+
+  .kicker {
+    font-size: 13px;
+    letter-spacing: 0.35em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  h1, h2 { font-family: "Noto Serif SC", serif; }
+  h2 { font-size: clamp(26px, 3.2vw, 40px); line-height: 1.25; margin-bottom: 18px; }
+  .card p { font-size: 16.5px; line-height: 1.95; color: var(--ink-dim); margin-bottom: 12px; font-weight: 300; }
+  .card p strong, .card p em { color: var(--ink); font-style: normal; font-weight: 500; }
+  .card .fact {
+    margin-top: 18px;
+    padding: 14px 18px;
+    border-left: 2px solid var(--gold);
+    background: rgba(240, 198, 126, 0.07);
+    font-size: 14.5px;
+    line-height: 1.8;
+    color: var(--gold);
+    border-radius: 0 10px 10px 0;
+  }
+
+  .hero { flex-direction: column; justify-content: center; text-align: center; align-items: center; }
+  .hero .kicker { letter-spacing: 0.5em; }
+  .hero h1 {
+    font-size: clamp(40px, 7vw, 88px);
+    font-weight: 900;
+    line-height: 1.15;
+    margin: 18px 0 22px;
+    background: linear-gradient(160deg, #fff 30%, var(--gold) 75%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero p { max-width: 620px; color: var(--ink-dim); font-size: 17px; line-height: 2; font-weight: 300; }
+  .cue {
+    margin-top: 8vh;
+    font-size: 12px;
+    letter-spacing: 0.4em;
+    color: var(--ink-dim);
+    animation: bob 2.2s ease-in-out infinite;
+  }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+  nav#timeline {
+    position: fixed;
+    right: 28px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  nav#timeline a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-direction: row-reverse;
+    text-decoration: none;
+    color: var(--ink-dim);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    opacity: 0.55;
+    transition: opacity 0.3s;
+  }
+  nav#timeline a .dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    border: 1px solid var(--gold-dim);
+    background: transparent;
+    transition: all 0.3s;
+    flex: none;
+  }
+  nav#timeline a.on { opacity: 1; color: var(--gold); }
+  nav#timeline a.on .dot { background: var(--gold); box-shadow: 0 0 12px var(--gold); }
+  nav#timeline a .lbl { opacity: 0; transform: translateX(6px); transition: all 0.3s; }
+  nav#timeline a:hover .lbl, nav#timeline a.on .lbl { opacity: 1; transform: translateX(0); }
+
+  #progressbar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    width: 100%;
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+    background: linear-gradient(90deg, var(--gold), #ff9d5c);
+    z-index: 10;
+  }
+
+  footer {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 60px 20px 80px;
+    color: var(--ink-dim);
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    line-height: 2.2;
+  }
+  footer .big {
+    font-family: "Noto Serif SC", serif;
+    font-size: clamp(20px, 2.6vw, 30px);
+    color: var(--ink);
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 760px) {
+    section { padding: 14vh 6vw; justify-content: center !important; }
+    .card { padding: 32px 26px; }
+    nav#timeline { display: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="space"></canvas>
+<div class="veil"></div>
+<div id="progressbar"></div>
+
+<nav id="timeline">
+  <a href="#s1" data-i="1"><span class="lbl">太阳星云</span><span class="dot"></span></a>
+  <a href="#s2" data-i="2"><span class="lbl">角动量守恒</span><span class="dot"></span></a>
+  <a href="#s3" data-i="3"><span class="lbl">原行星盘</span><span class="dot"></span></a>
+  <a href="#s4" data-i="4"><span class="lbl">碰撞吸积</span><span class="dot"></span></a>
+  <a href="#s5" data-i="5"><span class="lbl">黄道面</span><span class="dot"></span></a>
+  <a href="#s6" data-i="6"><span class="lbl">例外</span><span class="dot"></span></a>
+</nav>
+
+<main>
+  <section class="hero" id="hero">
+    <div class="kicker">46 亿 年 前 的 一 朵 云</div>
+    <h1>黄道面之谜<br />太阳系为何是一个平面</h1>
+    <p>水星、金星、地球、火星……八颗行星的轨道几乎躺在同一张“薄片”上。这不是巧合，而是一场由引力与角动量共同导演的宇宙演化。向下滚动，回到太阳诞生之前。</p>
+    <div class="cue">SCROLL ▾</div>
+  </section>
+
+  <section id="s1">
+    <div class="card">
+      <div class="kicker">STAGE 01 · 起点</div>
+      <h2>太阳星云：一朵缓缓旋转的气体和尘埃</h2>
+      <p>约 46 亿年前，银河系猎户旋臂附近漂浮着一团直径约 1–3 光年的<strong>分子云</strong>——99% 是氢和氦，1% 是上一代恒星死亡时抛出的尘埃颗粒。</p>
+      <p>附近一颗超新星爆发的激波（或云气自身的引力不稳定性）挤压了这朵云，使其中一小块区域密度超过临界值，<em>引力开始战胜气体压力，云团开始坍缩</em>。</p>
+      <div class="fact">证据：陨石中发现的短寿命放射性同位素（如 ²⁶Al）表明，太阳系形成前夕附近有超新星爆发注入了物质。</div>
+    </div>
+  </section>
+
+  <section id="s2">
+    <div class="card">
+      <div class="kicker">STAGE 02 · 坍缩加速</div>
+      <h2>角动量守恒：越缩越快的旋转</h2>
+      <p>星云并非静止——哪怕最初只有极其微弱的自转（量级约每百万年转一圈），当半径缩小上百万倍时，<strong>角动量守恒 L = m·v·r</strong> 会强迫转速急剧增加。</p>
+      <p>就像花样滑冰运动员收拢手臂会越转越快：坍缩中的云团从几乎不转，加速到数万年就转一圈。</p>
+      <div class="fact">角动量不能凭空消失。这是整个故事的钥匙——它决定了坍缩不可能是一个均匀的球，而必然甩出一个盘。</div>
+    </div>
+  </section>
+
+  <section id="s3">
+    <div class="card">
+      <div class="kicker">STAGE 03 · 扁平化</div>
+      <h2>离心力 vs 引力：云团被甩成一张盘</h2>
+      <p>沿旋转轴方向，气体可以自由下落；但在垂直于轴的方向，<em>离心效应抵抗引力</em>，物质无法继续向内，只能环绕中心旋转。</p>
+      <p>结果：99.8% 的质量坠向中心，点燃<strong>原太阳</strong>；剩下的物质摊平成一个环绕它的<strong>原行星盘</strong>——盘的平面，就是星云角动量矢量所定义的平面。</p>
+      <div class="fact">阿塔卡马望远镜阵（ALMA）已直接拍摄到 HL Tauri 等年轻恒星周围的原行星盘，环带结构清晰可见。</div>
+    </div>
+  </section>
+
+  <section id="s4">
+    <div class="card">
+      <div class="kicker">STAGE 04 · 建造行星</div>
+      <h2>碰撞吸积：从尘埃到行星</h2>
+      <p>盘内微米级的尘埃颗粒通过静电力粘成毫米级碎屑，碎屑碰撞聚合成米级石块，再聚集成<strong>公里级的星子</strong>。</p>
+      <p>星子之间的引力使它们互相吞并：<em>十万年形成行星胚胎，数千万年后只剩下少数几颗行星</em>，各自扫清了自己轨道附近的物质。</p>
+      <div class="fact">关键点：所有行星都在同一张盘里、沿同一方向诞生。盘的平面被每一颗行星“继承”了下来。</div>
+    </div>
+  </section>
+
+  <section id="s5">
+    <div class="card">
+      <div class="kicker">STAGE 05 · 答案揭晓</div>
+      <h2>黄道面：行星们共同继承的平面</h2>
+      <p>行星成形后围绕太阳公转，轨道全部接近原行星盘的平面。我们把<strong>地球公转轨道所在的平面称为“黄道面”</strong>，并以它为基准衡量其他行星的轨道倾角。</p>
+      <p>水星倾角 7.0°、金星 3.4°、火星 1.9°、木星 1.3°……八大行星的轨道面彼此相差不过几度——从侧面看，整个太阳系薄得像一张纸。</p>
+      <div class="fact">共面 + 同向公转 + 同向自转，是“太阳系诞生于同一张旋转盘”的三重指纹。</div>
+    </div>
+  </section>
+
+  <section id="s6">
+    <div class="card">
+      <div class="kicker">STAGE 06 · 例外证明规律</div>
+      <h2>冥王星：一条倾斜了 17° 的轨道</h2>
+      <p>冥王星轨道相对黄道面倾斜约 <strong>17°</strong>，还与海王星形成 3:2 轨道共振。它并非“盘内正常长大的行星”，而是<em>柯伊伯带中最大的冰质天体</em>，在太阳系早期行星迁移的引力动荡中被推上了今天的轨道。</p>
+      <p>水星偏大的 7° 倾角、金星逆向自转、天王星躺着转——这些“伤疤”记录了晚期重轰炸与巨行星迁移的暴力历史，却丝毫不改整体共面的事实。</p>
+      <div class="fact">2006 年冥王星被重新归类为矮行星。它的倾斜轨道恰恰是太阳系并非一直平静的证据。</div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="big">一张盘的遗产，写在每颗行星的轨道上</div>
+    引力让它坍缩 · 角动量让它旋转 · 离心力让它扁平 · 碰撞让它成星<br />
+    ECLIPTIC PLANE · THE STORY OF OUR SOLAR SYSTEM<br />
+    <a href="galaxy.html" style="color:#f0c67e;text-decoration:none;border-bottom:1px solid rgba(240,198,126,0.35)">下一站：3D 银河漫游 →</a>
+  </footer>
+</main>
+
+<script>
+const canvas = document.getElementById("space");
+const ctx = canvas.getContext("2d");
+let W, H, CX, CY, RMAX, DPR;
+
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = W * DPR; canvas.height = H * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  CX = W / 2; CY = H / 2;
+  RMAX = Math.min(W, H) * 0.42;
+}
+resize();
+window.addEventListener("resize", resize);
+
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const smooth = (x, a, b) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const mix = (a, b, t) => a + (b - a) * t;
+
+const NEBULA_N = 850;
+const ringR = [0.16, 0.24, 0.33, 0.44, 0.56, 0.68, 0.80, 0.93];
+const planetCols = ["#b8b0a6", "#e8c07a", "#6ea8e0", "#e0785a", "#e0a86e", "#e8d09a", "#8ad8d0", "#5a7ae0"];
+const planetSize = [3, 5, 5.5, 4, 12, 10, 7, 7];
+
+const parts = [];
+for (let i = 0; i < NEBULA_N; i++) {
+  parts.push({
+    a: rand(0, Math.PI * 2),
+    r: Math.pow(Math.random(), 0.6) * 0.95 + 0.05,
+    z: rand(-1, 1),
+    s: rand(0.4, 1.9),
+    h: rand(200, 275),
+    k: Math.floor(rand(0, 8)),
+    ja: rand(-0.3, 0.3),
+    jr: rand(-0.025, 0.025),
+    tw: rand(0, Math.PI * 2)
+  });
+}
+
+const stars = [];
+for (let i = 0; i < 240; i++) {
+  stars.push({ x: Math.random(), y: Math.random(), s: rand(0.3, 1.4), p: rand(0, Math.PI * 2), v: rand(0.5, 2) });
+}
+
+let stage = 0;
+function computeStage() {
+  const doc = document.documentElement;
+  const max = doc.scrollHeight - window.innerHeight;
+  const p = max > 0 ? window.scrollY / max : 0;
+  stage = clamp(p * 8 - 0.6, 0, 6.6);
+  document.getElementById("progressbar").style.transform = "scaleX(" + p + ")";
+}
+window.addEventListener("scroll", computeStage, { passive: true });
+computeStage();
+
+const sections = document.querySelectorAll("section[id^='s']");
+const links = document.querySelectorAll("nav#timeline a");
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((e) => {
+    if (e.isIntersecting) {
+      sections.forEach((s) => s.classList.toggle("active", s === e.target));
+      links.forEach((l) => l.classList.toggle("on", l.getAttribute("href") === "#" + e.target.id));
+    }
+  });
+}, { threshold: 0.45 });
+sections.forEach((s) => io.observe(s));
+
+let T = 0, last = performance.now();
+
+function draw(now) {
+  const dt = Math.min((now - last) / 1000, 0.05);
+  last = now;
+
+  const collapseW = smooth(stage, 0.7, 2.0);
+  const spinW = smooth(stage, 1.1, 2.6);
+  const flatW = smooth(stage, 2.2, 3.5);
+  const sunW = smooth(stage, 1.4, 3.1);
+  const clumpW = smooth(stage, 3.3, 4.6);
+  const orbitW = smooth(stage, 4.3, 5.3);
+  const plutoW = smooth(stage, 5.4, 6.3);
+  const fadeW = smooth(stage, 5.8, 6.6);
+
+  T += dt * (0.12 + spinW * 1.1);
+
+  ctx.fillStyle = "#05060f";
+  ctx.fillRect(0, 0, W, H);
+
+  for (const st of stars) {
+    const a = 0.25 + 0.55 * (0.5 + 0.5 * Math.sin(now / 1000 * st.v + st.p));
+    ctx.globalAlpha = a * 0.8;
+    ctx.fillStyle = "#cdd6ff";
+    ctx.fillRect(st.x * W, st.y * H, st.s, st.s);
+  }
+  ctx.globalAlpha = 1;
+
+  const shrink = 1 - 0.5 * collapseW;
+  const yFlat = mix(1, 0.16, flatW);
+  const dustAlpha = (1 - orbitW * 0.85) * (1 - fadeW * 0.35);
+
+  if (sunW > 0.01) {
+    const sr = 6 + sunW * Math.min(W, H) * 0.075;
+    const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, sr * 3.2);
+    g.addColorStop(0, "rgba(255, 236, 190, " + 0.95 * sunW + ")");
+    g.addColorStop(0.25, "rgba(255, 190, 110, " + 0.55 * sunW + ")");
+    g.addColorStop(1, "rgba(255, 150, 60, 0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(CX, CY, sr * 3.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255, 244, 214, " + sunW + ")";
+    ctx.beginPath();
+    ctx.arc(CX, CY, sr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const wobble = (1 - collapseW) * 14;
+
+  for (const p of parts) {
+    const kepler = 1 / (0.35 + p.r);
+    const ang = p.a + T * kepler * (0.35 + spinW * 1.4);
+
+    let rad = p.r * shrink * RMAX;
+    let x = rad * Math.cos(ang);
+    let y = rad * Math.sin(ang) * yFlat + p.z * (1 - flatW) * RMAX * 0.35;
+    x += Math.sin(p.tw + T * 3) * wobble;
+    y += Math.cos(p.tw * 1.7 + T * 2.4) * wobble;
+
+    if (clumpW > 0) {
+      const ring = (ringR[p.k] + p.jr) * RMAX * mix(1, shrink, 0.4);
+      const pang = p.k * 1.31 + T * 0.55 / Math.sqrt(ringR[p.k] + 0.1) + p.ja;
+      const cx2 = ring * Math.cos(pang);
+      const cy2 = ring * Math.sin(pang) * yFlat;
+      const spread = mix(38, 5, clumpW);
+      const ox = Math.sin(p.tw * 3.1) * spread;
+      const oy = Math.cos(p.tw * 2.3) * spread * yFlat;
+      x = mix(x, cx2 + ox, clumpW);
+      y = mix(y, cy2 + oy, clumpW);
+    }
+
+    const alpha = dustAlpha * (0.25 + 0.5 * Math.abs(Math.sin(p.tw + now / 1400)));
+    if (alpha <= 0.01) continue;
+    ctx.globalAlpha = alpha;
+    const hue = flatW > 0.6 ? mix(p.h, 45, 0.35) : p.h;
+    ctx.fillStyle = "hsl(" + hue + ", 65%, " + mix(70, 82, sunW) + "%)";
+    ctx.beginPath();
+    ctx.arc(CX + x, CY + y, p.s, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  if (orbitW > 0.01) {
+    for (let k = 0; k < 8; k++) {
+      const ring = ringR[k] * RMAX * mix(1, shrink, 0.4);
+      ctx.globalAlpha = orbitW * 0.28 * (1 - fadeW * 0.2);
+      ctx.strokeStyle = "#f0c67e";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.ellipse(CX, CY, ring, ring * yFlat, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const pang = k * 1.31 + T * 0.55 / Math.sqrt(ringR[k] + 0.1);
+      const px = CX + ring * Math.cos(pang);
+      const py = CY + ring * Math.sin(pang) * yFlat;
+      const ps = planetSize[k] * (Math.min(W, H) / 900 + 0.55);
+      const gg = ctx.createRadialGradient(px, py, 0, px, py, ps * 3);
+      gg.addColorStop(0, planetCols[k]);
+      gg.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.globalAlpha = orbitW;
+      ctx.fillStyle = gg;
+      ctx.beginPath();
+      ctx.arc(px, py, ps * 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = planetCols[k];
+      ctx.beginPath();
+      ctx.arc(px, py, ps, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  if (plutoW > 0.01) {
+    const pr = 1.08 * RMAX * mix(1, shrink, 0.4);
+    ctx.save();
+    ctx.translate(CX, CY);
+    ctx.rotate(-0.32);
+    ctx.globalAlpha = plutoW * 0.6;
+    ctx.strokeStyle = "#9a8ae0";
+    ctx.setLineDash([6, 7]);
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, pr, pr * 0.72, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    const pa = T * 0.3 + 2;
+    const px = pr * Math.cos(pa), py = pr * 0.72 * Math.sin(pa);
+    ctx.fillStyle = "#c9bdf5";
+    ctx.beginPath();
+    ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = plutoW * 0.9;
+    ctx.font = "12px 'Noto Sans SC', sans-serif";
+    ctx.fillStyle = "#c9bdf5";
+    ctx.fillText("冥王星 · 倾角 17°", px + 10, py - 8);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

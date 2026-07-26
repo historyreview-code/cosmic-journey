@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>银河漫游 · 从太阳系到银河系</title>
+<meta name="description" content="3D 沉浸式滚动叙事：从太阳系出发，穿越猎户旋臂，俯瞰银河系。" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --gold: #f0c67e;
+    --gold-dim: rgba(240, 198, 126, 0.35);
+    --ink: #e8eaf2;
+    --ink-dim: rgba(232, 234, 242, 0.62);
+    --bg: #030409;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--ink); font-family: "Noto Sans SC", system-ui, sans-serif; overflow-x: hidden; }
+  #scene { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; }
+  .veil { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 55%, transparent 35%, rgba(3, 4, 9, 0.5) 100%); }
+  main { position: relative; z-index: 2; }
+
+  section { min-height: 110vh; display: flex; align-items: center; padding: 12vh 8vw; }
+  section:nth-of-type(even) { justify-content: flex-end; }
+
+  .card {
+    max-width: 560px;
+    background: rgba(8, 11, 24, 0.6);
+    border: 1px solid rgba(240, 198, 126, 0.16);
+    border-radius: 18px;
+    padding: 44px 48px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+    opacity: 0.35; transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  section.active .card { opacity: 1; transform: translateY(0); }
+  .kicker { font-size: 13px; letter-spacing: 0.35em; color: var(--gold); margin-bottom: 14px; }
+  h1, h2 { font-family: "Noto Serif SC", serif; }
+  h2 { font-size: clamp(26px, 3.2vw, 40px); line-height: 1.25; margin-bottom: 18px; }
+  .card p { font-size: 16.5px; line-height: 1.95; color: var(--ink-dim); margin-bottom: 12px; font-weight: 300; }
+  .card p strong, .card p em { color: var(--ink); font-style: normal; font-weight: 500; }
+  .card .fact {
+    margin-top: 18px; padding: 14px 18px; border-left: 2px solid var(--gold);
+    background: rgba(240, 198, 126, 0.07); font-size: 14.5px; line-height: 1.8;
+    color: var(--gold); border-radius: 0 10px 10px 0;
+  }
+
+  .hero { flex-direction: column; justify-content: center; text-align: center; align-items: center; }
+  .hero .kicker { letter-spacing: 0.5em; }
+  .hero h1 {
+    font-size: clamp(40px, 7vw, 88px); font-weight: 900; line-height: 1.15; margin: 18px 0 22px;
+    background: linear-gradient(160deg, #fff 30%, var(--gold) 75%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p { max-width: 620px; color: var(--ink-dim); font-size: 17px; line-height: 2; font-weight: 300; }
+  .cue { margin-top: 7vh; font-size: 12px; letter-spacing: 0.4em; color: var(--ink-dim); animation: bob 2.2s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+  .scale-tag {
+    position: fixed; left: 28px; bottom: 24px; z-index: 5;
+    font-size: 12.5px; letter-spacing: 0.2em; color: var(--ink-dim);
+    border: 1px solid rgba(240,198,126,0.2); border-radius: 999px;
+    padding: 8px 18px; background: rgba(8,11,24,0.55); backdrop-filter: blur(8px);
+  }
+  .scale-tag b { color: var(--gold); font-weight: 500; }
+
+  #voiceBtn {
+    position: fixed; right: 28px; bottom: 24px; z-index: 6;
+    font-family: inherit; font-size: 13px; letter-spacing: 0.15em;
+    color: var(--ink); background: rgba(8,11,24,0.7);
+    border: 1px solid rgba(240,198,126,0.35); border-radius: 999px;
+    padding: 10px 22px; cursor: pointer; backdrop-filter: blur(8px);
+    transition: all 0.3s;
+  }
+  #voiceBtn:hover { border-color: var(--gold); color: var(--gold); }
+  #voiceBtn.on { background: rgba(240,198,126,0.15); color: var(--gold); border-color: var(--gold); }
+
+  .label {
+    position: fixed; z-index: 3; pointer-events: none;
+    font-size: 12px; letter-spacing: 0.12em; color: var(--ink);
+    text-shadow: 0 0 8px rgba(0,0,0,0.9); white-space: nowrap;
+    transform: translate(-50%, -140%);
+    opacity: 0; transition: opacity 0.5s;
+  }
+  .label::after {
+    content: ""; position: absolute; left: 50%; top: 118%;
+    width: 1px; height: 14px; background: rgba(240,198,126,0.5);
+  }
+  .label b { color: var(--gold); font-weight: 500; }
+
+  nav#timeline {
+    position: fixed; right: 28px; top: 50%; transform: translateY(-50%);
+    z-index: 5; display: flex; flex-direction: column; gap: 18px;
+  }
+  nav#timeline a {
+    display: flex; align-items: center; gap: 10px; flex-direction: row-reverse;
+    text-decoration: none; color: var(--ink-dim); font-size: 12px; letter-spacing: 0.12em;
+    opacity: 0.55; transition: opacity 0.3s;
+  }
+  nav#timeline a .dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--gold-dim); background: transparent; transition: all 0.3s; flex: none; }
+  nav#timeline a.on { opacity: 1; color: var(--gold); }
+  nav#timeline a.on .dot { background: var(--gold); box-shadow: 0 0 12px var(--gold); }
+  nav#timeline a .lbl { opacity: 0; transform: translateX(6px); transition: all 0.3s; }
+  nav#timeline a:hover .lbl, nav#timeline a.on .lbl { opacity: 1; transform: translateX(0); }
+
+  #progressbar { position: fixed; top: 0; left: 0; height: 2px; width: 100%;
+    transform-origin: 0 50%; transform: scaleX(0);
+    background: linear-gradient(90deg, var(--gold), #ff9d5c); z-index: 10; }
+
+  footer { position: relative; z-index: 2; text-align: center; padding: 60px 20px 80px;
+    color: var(--ink-dim); font-size: 13px; letter-spacing: 0.15em; line-height: 2.2; }
+  footer .big { font-family: "Noto Serif SC", serif; font-size: clamp(20px, 2.6vw, 30px);
+    color: var(--ink); letter-spacing: 0.08em; margin-bottom: 16px; }
+  footer a { color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-dim); }
+
+  @media (max-width: 760px) {
+    section { padding: 14vh 6vw; justify-content: center !important; }
+    .card { padding: 32px 26px; }
+    nav#timeline { display: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div class="veil"></div>
+<div id="progressbar"></div>
+<div class="scale-tag" id="scaleTag">尺度 · <b>1 天文单位</b></div>
+<button id="voiceBtn">🔊 开启配音解说</button>
+
+<nav id="timeline">
+  <a href="#g1" data-i="1"><span class="lbl">星际介质</span><span class="dot"></span></a>
+  <a href="#g2" data-i="2"><span class="lbl">邻近恒星</span><span class="dot"></span></a>
+  <a href="#g3" data-i="3"><span class="lbl">猎户旋臂</span><span class="dot"></span></a>
+  <a href="#g4" data-i="4"><span class="lbl">银河全景</span><span class="dot"></span></a>
+  <a href="#g5" data-i="5"><span class="lbl">银心黑洞</span><span class="dot"></span></a>
+  <a href="#g6" data-i="6"><span class="lbl">侧视银盘</span><span class="dot"></span></a>
+  <a href="#g7" data-i="7"><span class="lbl">本星系群</span><span class="dot"></span></a>
+</nav>
+
+<main>
+  <section class="hero" id="hero" data-voice="欢迎登上银河漫游号。接下来的旅程，我们将从太阳系出发，穿越星际空间，一直飞到银河系之外。请系好安全带，向下滚动，出发。">
+    <div class="kicker">A JOURNEY THROUGH THE MILKY WAY</div>
+    <h1>银河漫游<br />从太阳系到银河系之外</h1>
+    <p>上一站我们了解了太阳系如何在一张盘中诞生。这一次，把视野放大十万倍——飞出太阳系，穿越猎户旋臂，俯瞰整个银河系，直到看见我们的星系邻居仙女座。</p>
+    <div class="cue">SCROLL ▾</div>
+  </section>
+
+  <section id="g1" data-voice="第一站，星际介质。离开太阳系，我们进入恒星之间的空间。这里并不是真空，每立方厘米漂浮着大约一个氢原子，还有星际尘埃组成的暗云。我们所在的这片区域叫本地泡，是远古超新星爆发吹出的一个直径三百光年的空腔。">
+    <div class="card">
+      <div class="kicker">STAGE 01 · 尺度 1 光年</div>
+      <h2>星际介质：恒星之间并非空无一物</h2>
+      <p>飞出太阳系（半径约 1–2 光年的奥尔特云），便进入<strong>星际空间</strong>。这里每立方厘米约有 1 个氢原子——比地球上最好的"真空"还要空万亿倍，但乘以光年尺度，总质量占银河系的 10–15%。</p>
+      <p>太阳系此刻正穿行在<em>本地星际云</em>中，而它又处在一个更大的结构——直径约 300 光年的<strong>本地泡</strong>里，那是约 1000 万年前一连串超新星爆发吹出的空腔。</p>
+      <div class="fact">星际介质是恒星的重生循环：老恒星抛出物质 → 形成分子云 → 坍缩成新恒星。太阳系的原料就来自这里。</div>
+    </div>
+  </section>
+
+  <section id="g2" data-voice="第二站，邻近恒星。离我们最近的恒星是比邻星，距离四点二四光年。它是一颗红矮星，拥有一颗位于宜居带的行星，比邻星b。夜空中最亮的天狼星距离我们八点六光年。这些恒星和太阳一样，都在围绕银河系中心狂奔。">
+    <div class="card">
+      <div class="kicker">STAGE 02 · 尺度 10 光年</div>
+      <h2>邻近恒星：太阳的街坊邻里</h2>
+      <p>最近的恒星邻居是<strong>比邻星</strong>（4.24 光年）——一颗安静的红矮星，拥有位于宜居带的行星比邻星 b。夜空中最亮的天狼星距我们 8.6 光年，织女星 25 光年。</p>
+      <p>以太阳为中心、半径几十光年内约有数百颗恒星，其中 70% 以上是暗弱的红矮星。它们彼此以每秒几十公里的相对速度擦肩而过，<em>同时都在绕银心公转</em>。</p>
+      <div class="fact">太阳绕银心一圈约需 2.3 亿年，称为一个"银河年"。自太阳诞生以来，它已绕行了约 20 圈。</div>
+    </div>
+  </section>
+
+  <section id="g3" data-voice="第三站，猎户旋臂。把视野拉到一千光年，你会发现太阳系位于一条不起眼的支臂上，叫猎户臂，或者本地臂。它夹在两条主旋臂之间，内侧是人马臂，外侧是英仙臂。旋臂并不是固定的结构，而是恒星和气体交通拥堵形成的密度波。">
+    <div class="card">
+      <div class="kicker">STAGE 03 · 尺度 1,000 光年</div>
+      <h2>猎户旋臂：我们居住的"城乡结合部"</h2>
+      <p>视野拉到千光年尺度，结构开始显现：太阳系位于<strong>猎户臂</strong>（本地臂）——一条夹在两条主旋臂之间的支臂。内侧是人马臂，外侧是英仙臂。</p>
+      <p>旋臂不是固定不变的"手臂"，而是<em>密度波</em>：像高速公路上的拥堵路段，恒星和气体进入旋臂时减速、聚集，触发新恒星诞生，然后再穿出旋臂。</p>
+      <div class="fact">旋臂中诞生的蓝色大质量恒星寿命仅千万年，走不出旋臂就死亡——所以旋臂总是显得又蓝又亮。</div>
+    </div>
+  </section>
+
+  <section id="g4" data-voice="第四站，银河系全景。现在我们升到银河平面上方两万光年。整个银河系尽收眼底，一个直径约十万光年的棒旋星系，包含两千亿到四千亿颗恒星。太阳只是其中毫不起眼的一颗。夜空中那条淡淡的银河光带，就是我们从内部看到的银盘。">
+    <div class="card">
+      <div class="kicker">STAGE 04 · 尺度 100,000 光年</div>
+      <h2>银河全景：2000 亿颗恒星的岛屿</h2>
+      <p>升到银盘上方俯瞰：银河系是一个直径约 10 万光年的<strong>棒旋星系</strong>，中心有棒状结构，旋臂从棒的两端展开，包含 2000–4000 亿颗恒星。</p>
+      <p>我们永远无法飞出银河系给它拍一张照片——所有"银河系照片"都是根据射电、红外观测绘制的艺术想象图。夜空中那条银河光带，<em>就是我们从盘内看向银盘的样子</em>。</p>
+      <div class="fact">2021 年基于盖亚卫星数据的研究表明，银河系的旋臂结构比之前认为的更破碎、更不规则。</div>
+    </div>
+  </section>
+
+  <section id="g5" data-voice="第五站，银河系中心。向着银心俯冲。在人马座方向，两万六千光年之外，潜伏着一个四百万倍太阳质量的超大质量黑洞，人马座A星。一群恒星以每秒数千公里的速度绕着它疯狂旋转，正是它们的轨道暴露了这个看不见的巨兽。">
+    <div class="card">
+      <div class="kicker">STAGE 05 · 银心</div>
+      <h2>人马座 A*：400 万个太阳质量的深渊</h2>
+      <p>俯冲向银心——在人马座方向 2.6 万光年处，潜伏着超大质量黑洞<strong>人马座 A*</strong>，质量约为太阳的 400 万倍。</p>
+      <p>它不发光，但有一群"S 星"以高达每秒 5000 公里的速度绕它狂奔。天文学家通过追踪这些恒星轨道十几年，反推出黑洞的存在——<em>这项工作获得了 2020 年诺贝尔物理学奖</em>。</p>
+      <div class="fact">2022 年，事件视界望远镜发布了人马座 A* 的首张"照片"：一个被发光等离子体环绕的阴影环。</div>
+    </div>
+  </section>
+
+  <section id="g6" data-voice="第六站，侧视银盘。转到侧面看，银河系薄得惊人。银盘直径十万光年，厚度却只有约一千光年，就像一张直径一米、厚度一厘米的唱片。还记得太阳系的黄道面吗？行星共面，恒星成盘，背后是同一个物理定律，角动量守恒。银盘之外，还漂浮着一个由古老球状星团和暗物质组成的银晕。">
+    <div class="card">
+      <div class="kicker">STAGE 06 · 侧视</div>
+      <h2>侧视银盘：一张直径 10 万光年的"唱片"</h2>
+      <p>转到边缘视角：银盘直径 10 万光年，厚度仅约 1000 光年——<strong>薄得像一张唱片</strong>。这正是角动量守恒在星系尺度上的重演：旋转的气体盘坍缩、扁平化，恒星在盘内代代诞生。</p>
+      <p>盘外是近乎球形的<em>银晕</em>，散布着 150 多个古老的球状星团，每个包含数十万颗上百亿岁的恒星；再往外，是看不见的<strong>暗物质晕</strong>，质量是可见物质的 5 倍以上。</p>
+      <div class="fact">从行星盘到银盘：黄道面与银盘倾角约 60°，但扁平化的物理机制一脉相承——都源于角动量守恒。</div>
+    </div>
+  </section>
+
+  <section id="g7" data-voice="最后一站，本星系群。继续后退，再后退，直到银河系变成一个小光点。在两百万光年外，出现了另一个巨大的旋涡，仙女座星系，它正以每秒一百一十公里的速度向我们靠近。约四十五亿年后，它将与银河系相撞并合并，诞生一个新的星系，有人已经为它起好了名字，银河仙女系。我们的旅程就到这里。感谢你乘坐银河漫游号。">
+    <div class="card">
+      <div class="kicker">STAGE 07 · 尺度 250 万光年</div>
+      <h2>本星系群：银河系的群岛世界</h2>
+      <p>再退远，银河系缩成一个光点。250 万光年外漂浮着另一个巨旋涡——<strong>仙女座星系（M31）</strong>，本星系群中最大的成员，正以每秒 110 公里向我们靠近。</p>
+      <p>银河系、仙女座加上三角座星系和约 80 个矮星系，共同组成<em>本星系群</em>，直径约 1000 万光年。而它本身只是室女座超星系团边缘的一小部分。</p>
+      <div class="fact">约 45 亿年后，银河系将与仙女座合并成一个巨大的椭圆星系。那时太阳的旋臂之旅，也将翻开新的一页。</div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="big">我们从尘埃中来，穿行于群星之间</div>
+    本地泡 → 猎户臂 → 银盘 → 人马座A* → 本星系群<br />
+    <a href="index.html">← 返回：太阳系黄道面的形成</a> · <a href="cosmos.html">下一站：宇宙简史 →</a>
+  </footer>
+</main>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from "three";
+
+const canvas = document.getElementById("scene");
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+} catch (e) {
+  const d = document.createElement("div");
+  d.style.cssText = "position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px;color:#e8eaf2;background:#030409;font-size:15px;line-height:2";
+  d.textContent = "当前浏览器不支持 WebGL，无法渲染 3D 场景。请使用较新的 Chrome / Edge / Safari 并确保已开启硬件加速。";
+  document.body.appendChild(d);
+  throw e;
+}
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x030409);
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.01, 2000);
+
+function makeGlowTexture() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 64;
+  const g = c.getContext("2d");
+  const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, "rgba(255,255,255,1)");
+  grad.addColorStop(0.35, "rgba(255,255,255,0.5)");
+  grad.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 64, 64);
+  const t = new THREE.CanvasTexture(c);
+  return t;
+}
+const glowTex = makeGlowTexture();
+
+function gauss() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+const GAL_R = 15;
+const SUN_R = 8.1;
+
+function buildGalaxy(count, arms, spin) {
+  const pos = new Float32Array(count * 3);
+  const col = new Float32Array(count * 3);
+  const cInner = new THREE.Color(0xffd9a0);
+  const cMid = new THREE.Color(0xffb27a);
+  const cOuter = new THREE.Color(0x8aa8ff);
+  for (let i = 0; i < count; i++) {
+    const r = Math.pow(Math.random(), 0.65) * GAL_R + 0.3;
+    const arm = i % arms;
+    const branch = (arm / arms) * Math.PI * 2;
+    const spiralA = (r / GAL_R) * spin;
+    const spread = (0.35 + r * 0.09) * (Math.random() < 0.5 ? 1 : -1) * Math.abs(gauss()) * 0.55;
+    const a = branch + spiralA + spread;
+    const x = Math.cos(a) * r + gauss() * 0.15;
+    const z = Math.sin(a) * r + gauss() * 0.15;
+    const y = gauss() * (0.32 * Math.exp(-r / 7) + 0.04);
+    pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z;
+    const t = r / GAL_R;
+    const c = t < 0.3 ? cInner.clone().lerp(cMid, t / 0.3) : cMid.clone().lerp(cOuter, (t - 0.3) / 0.7);
+    const dim = 0.55 + Math.random() * 0.45;
+    col[i * 3] = c.r * dim; col[i * 3 + 1] = c.g * dim; col[i * 3 + 2] = c.b * dim;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 0.09, map: glowTex, vertexColors: true, transparent: true,
+    depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.9
+  });
+  return new THREE.Points(geo, mat);
+}
+const galaxy = buildGalaxy(70000, 4, 4.6);
+scene.add(galaxy);
+
+function buildBulge(count) {
+  const pos = new Float32Array(count * 3);
+  const col = new Float32Array(count * 3);
+  const c = new THREE.Color(0xffe2b0);
+  for (let i = 0; i < count; i++) {
+    const r = Math.abs(gauss()) * 1.5;
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(2 * Math.random() - 1);
+    pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+    pos[i * 3 + 1] = r * Math.cos(ph) * 0.55;
+    pos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
+    const d = 0.5 + Math.random() * 0.5;
+    col[i * 3] = c.r * d; col[i * 3 + 1] = c.g * d; col[i * 3 + 2] = c.b * d;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 0.12, map: glowTex, vertexColors: true, transparent: true,
+    depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.85
+  });
+  return new THREE.Points(geo, mat);
+}
+scene.add(buildBulge(18000));
+
+function buildHalo(count) {
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const r = 9 + Math.abs(gauss()) * 7;
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(2 * Math.random() - 1);
+    pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+    pos[i * 3 + 1] = r * Math.cos(ph) * 0.8;
+    pos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 0.22, map: glowTex, color: 0xffe8c0, transparent: true,
+    depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.16
+  });
+  return new THREE.Points(geo, mat);
+}
+const halo = buildHalo(4000);
+scene.add(halo);
+
+function buildLocalStars(count) {
+  const pos = new Float32Array(count * 3);
+  const col = new Float32Array(count * 3);
+  const palette = [0xffd0a0, 0xfff4e0, 0xaac8ff, 0xff9a7a, 0xffffff];
+  for (let i = 0; i < count; i++) {
+    const r = Math.pow(Math.random(), 1.6) * 1.4 + 0.06;
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(2 * Math.random() - 1);
+    pos[i * 3] = SUN_R + r * Math.sin(ph) * Math.cos(th);
+    pos[i * 3 + 1] = r * Math.cos(ph) * 0.7;
+    pos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
+    const c = new THREE.Color(palette[i % palette.length]);
+    col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 0.14, map: glowTex, vertexColors: true, transparent: true,
+    depthWrite: false, blending: THREE.AdditiveBlending
+  });
+  return new THREE.Points(geo, mat);
+}
+scene.add(buildLocalStars(120));
+
+function addMarker(x, y, z, color, size) {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(new Float32Array([x, y, z]), 3));
+  const m = new THREE.PointsMaterial({
+    size, map: glowTex, color, transparent: true,
+    depthWrite: false, blending: THREE.AdditiveBlending
+  });
+  const p = new THREE.Points(g, m);
+  scene.add(p);
+  return p;
+}
+
+const sunMarker = addMarker(SUN_R, 0, 0, 0xffe9b0, 0.55);
+addMarker(SUN_R + 0.35, 0.05, 0.25, 0xff8a7a, 0.3);
+addMarker(SUN_R - 0.4, 0.1, -0.45, 0xcfe0ff, 0.35);
+addMarker(SUN_R + 1.1, -0.1, 0.9, 0xffffff, 0.35);
+addMarker(SUN_R - 2.6, 0.15, 1.9, 0xffb08a, 0.4);
+
+const bhGroup = new THREE.Group();
+const bhGlow = addMarker(0, 0, 0, 0xffc890, 1.6);
+bhGroup.add(bhGlow);
+const ringGeo = new THREE.RingGeometry(1.1, 1.35, 64);
+const ringMat = new THREE.MeshBasicMaterial({ color: 0xffb060, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
+const bhRing = new THREE.Mesh(ringGeo, ringMat);
+bhRing.rotation.x = Math.PI / 2.3;
+scene.add(bhRing);
+
+const andromeda = new THREE.Group();
+const andGeo = new THREE.BufferGeometry();
+const andN = 8000;
+const andPos = new Float32Array(andN * 3);
+const andCol = new Float32Array(andN * 3);
+for (let i = 0; i < andN; i++) {
+  const r = Math.pow(Math.random(), 0.7) * 6 + 0.2;
+  const arm = i % 2;
+  const a = (arm / 2) * Math.PI * 2 + (r / 6) * 4 + gauss() * 0.3;
+  andPos[i * 3] = Math.cos(a) * r;
+  andPos[i * 3 + 1] = gauss() * 0.25;
+  andPos[i * 3 + 2] = Math.sin(a) * r;
+  const d = 0.5 + Math.random() * 0.5;
+  andCol[i * 3] = 0.75 * d; andCol[i * 3 + 1] = 0.8 * d; andCol[i * 3 + 2] = 1.0 * d;
+}
+andGeo.setAttribute("position", new THREE.BufferAttribute(andPos, 3));
+andGeo.setAttribute("color", new THREE.BufferAttribute(andCol, 3));
+andromeda.add(new THREE.Points(andGeo, new THREE.PointsMaterial({
+  size: 0.14, map: glowTex, vertexColors: true, transparent: true,
+  depthWrite: false, blending: THREE.AdditiveBlending
+})));
+andromeda.position.set(-38, 14, -70);
+andromeda.rotation.x = 0.7;
+andromeda.rotation.z = 0.4;
+scene.add(andromeda);
+
+function buildBgStars(count) {
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const r = 300 + Math.random() * 500;
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(2 * Math.random() - 1);
+    pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+    pos[i * 3 + 1] = r * Math.cos(ph);
+    pos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  return new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 0.8, map: glowTex, color: 0xaab4dd, transparent: true, opacity: 0.6,
+    depthWrite: false, blending: THREE.AdditiveBlending
+  }));
+}
+scene.add(buildBgStars(1500));
+
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const smooth01 = (t) => t * t * (3 - 2 * t);
+
+const keys = [
+  { pos: [SUN_R + 0.55, 0.35, 0.9], look: [SUN_R, 0, 0], scale: "1 天文单位" },
+  { pos: [SUN_R + 0.9, 0.5, 1.4], look: [SUN_R, 0, 0], scale: "1 光年" },
+  { pos: [SUN_R + 2.2, 1.3, 2.6], look: [SUN_R, 0, 0], scale: "10 光年" },
+  { pos: [SUN_R + 3, 4.5, 7], look: [6, 0, 0], scale: "1,000 光年" },
+  { pos: [2, 30, 14], look: [0, 0, 0], scale: "100,000 光年" },
+  { pos: [1.2, 2.2, 4.2], look: [0, 0, 0], scale: "26,000 光年（银心）" },
+  { pos: [26, 2.0, 2], look: [0, 0, 0], scale: "银盘侧视" },
+  { pos: [30, 26, 60], look: [-12, 4, -22], scale: "250 万光年" }
+];
+
+let stage = 0;
+function computeStage() {
+  const doc = document.documentElement;
+  const max = doc.scrollHeight - innerHeight;
+  const p = max > 0 ? scrollY / max : 0;
+  stage = clamp(p * (keys.length + 1) - 0.6, 0, keys.length - 1 + 0.4);
+  document.getElementById("progressbar").style.transform = "scaleX(" + p + ")";
+  const idx = clamp(Math.round(stage), 0, keys.length - 1);
+  document.getElementById("scaleTag").innerHTML = "尺度 · <b>" + keys[idx].scale + "</b>";
+}
+addEventListener("scroll", computeStage, { passive: true });
+computeStage();
+
+const labels = [
+  { el: null, text: "<b>太阳系</b> · 猎户臂", pos: new THREE.Vector3(SUN_R, 0.25, 0), range: [0, 4.4] },
+  { el: null, text: "<b>比邻星</b> 4.24 ly", pos: new THREE.Vector3(SUN_R + 0.35, 0.3, 0.25), range: [1, 2.6] },
+  { el: null, text: "<b>天狼星</b> 8.6 ly", pos: new THREE.Vector3(SUN_R - 0.4, 0.35, -0.45), range: [1, 2.6] },
+  { el: null, text: "<b>织女星</b> 25 ly", pos: new THREE.Vector3(SUN_R + 1.1, 0.15, 0.9), range: [1.4, 2.6] },
+  { el: null, text: "<b>参宿四</b> ~550 ly", pos: new THREE.Vector3(SUN_R - 2.6, 0.4, 1.9), range: [2, 3.6] },
+  { el: null, text: "<b>人马臂</b>", pos: new THREE.Vector3(4.5, 0.3, 4.5), range: [2.6, 3.8] },
+  { el: null, text: "<b>人马座 A*</b> · 超大质量黑洞", pos: new THREE.Vector3(0, 1.1, 0), range: [3.6, 5.6] },
+  { el: null, text: "<b>银晕</b> · 球状星团 + 暗物质", pos: new THREE.Vector3(0, 8, 0), range: [5.4, 6.6] },
+  { el: null, text: "<b>仙女座星系 M31</b> · 250 万光年", pos: new THREE.Vector3(-38, 15.5, -70), range: [6.4, 8] }
+];
+labels.forEach((l) => {
+  const d = document.createElement("div");
+  d.className = "label";
+  d.innerHTML = l.text;
+  document.body.appendChild(d);
+  l.el = d;
+});
+
+const sections = document.querySelectorAll("section[id^='g']");
+const links = document.querySelectorAll("nav#timeline a");
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((e) => {
+    if (e.isIntersecting) {
+      sections.forEach((s) => s.classList.toggle("active", s === e.target));
+      links.forEach((l) => l.classList.toggle("on", l.getAttribute("href") === "#" + e.target.id));
+      const v = e.target.dataset.voice;
+      if (v) speak(v);
+    }
+  });
+}, { threshold: 0.45 });
+sections.forEach((s) => io.observe(s));
+io.observe(document.getElementById("hero"));
+
+let voiceOn = false;
+const voiceBtn = document.getElementById("voiceBtn");
+function speak(text) {
+  if (!voiceOn || !("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "zh-CN";
+  u.rate = 0.95;
+  u.pitch = 1;
+  const voices = speechSynthesis.getVoices();
+  const zh = voices.find((v) => v.lang.replace("_", "-").startsWith("zh"));
+  if (zh) u.voice = zh;
+  speechSynthesis.speak(u);
+}
+voiceBtn.addEventListener("click", () => {
+  voiceOn = !voiceOn;
+  voiceBtn.classList.toggle("on", voiceOn);
+  voiceBtn.textContent = voiceOn ? "🔇 关闭配音解说" : "🔊 开启配音解说";
+  if (voiceOn) {
+    const active = document.querySelector("section.active") || document.getElementById("hero");
+    speak(active.dataset.voice || "");
+  } else {
+    speechSynthesis.cancel();
+  }
+});
+if ("speechSynthesis" in window) speechSynthesis.getVoices();
+
+const v3a = new THREE.Vector3(), v3b = new THREE.Vector3();
+const curPos = new THREE.Vector3().fromArray(keys[0].pos);
+const curLook = new THREE.Vector3().fromArray(keys[0].look);
+
+function frame(now) {
+  const t = now / 1000;
+  galaxy.rotation.y = t * 0.008;
+  bhRing.rotation.z = t * 0.4;
+  andromeda.rotation.y = t * 0.01;
+
+  const s = clamp(stage, 0, keys.length - 1);
+  const i = Math.floor(s);
+  const j = Math.min(i + 1, keys.length - 1);
+  const f = smooth01(s - i);
+  v3a.fromArray(keys[i].pos).lerp(v3b.fromArray(keys[j].pos), f);
+  const lx = keys[i].look[0] + (keys[j].look[0] - keys[i].look[0]) * f;
+  const ly = keys[i].look[1] + (keys[j].look[1] - keys[i].look[1]) * f;
+  const lz = keys[i].look[2] + (keys[j].look[2] - keys[i].look[2]) * f;
+
+  v3a.x += Math.sin(t * 0.3) * 0.06;
+  v3a.y += Math.cos(t * 0.22) * 0.05;
+  curPos.lerp(v3a, 0.06);
+  curLook.lerp(new THREE.Vector3(lx, ly, lz), 0.06);
+  camera.position.copy(curPos);
+  camera.lookAt(curLook);
+
+  halo.material.opacity = 0.06 + smooth01(clamp((stage - 5) / 1.4, 0, 1)) * 0.16;
+
+  labels.forEach((l) => {
+    const inRange = stage >= l.range[0] && stage <= l.range[1];
+    if (!inRange) { l.el.style.opacity = 0; return; }
+    const p = l.pos.clone().project(camera);
+    if (p.z > 1) { l.el.style.opacity = 0; return; }
+    l.el.style.left = (p.x * 0.5 + 0.5) * innerWidth + "px";
+    l.el.style.top = (-p.y * 0.5 + 0.5) * innerHeight + "px";
+    l.el.style.opacity = 1;
+  });
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

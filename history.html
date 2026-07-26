@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>仰望星空五千年 · 人类探索宇宙的历史</title>
+<meta name="description" content="3D 沉浸式滚动叙事：从巨石阵到引力波，人类认知宇宙的壮丽历程。" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --gold: #f0c67e;
+    --gold-dim: rgba(240, 198, 126, 0.35);
+    --ink: #e8eaf2;
+    --ink-dim: rgba(232, 234, 242, 0.62);
+    --bg: #03040a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--ink); font-family: "Noto Sans SC", system-ui, sans-serif; overflow-x: hidden; }
+  #scene { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; }
+  .veil { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 55%, transparent 35%, rgba(3, 4, 10, 0.5) 100%); }
+  main { position: relative; z-index: 2; }
+
+  section { min-height: 110vh; display: flex; align-items: center; padding: 12vh 8vw; }
+  section:nth-of-type(even) { justify-content: flex-end; }
+
+  .card {
+    max-width: 560px;
+    background: rgba(8, 10, 22, 0.6);
+    border: 1px solid rgba(240, 198, 126, 0.16);
+    border-radius: 18px;
+    padding: 44px 48px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+    opacity: 0.35; transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  section.active .card { opacity: 1; transform: translateY(0); }
+  .kicker { font-size: 13px; letter-spacing: 0.35em; color: var(--gold); margin-bottom: 14px; }
+  h1, h2 { font-family: "Noto Serif SC", serif; }
+  h2 { font-size: clamp(26px, 3.2vw, 40px); line-height: 1.25; margin-bottom: 18px; }
+  .card p { font-size: 16.5px; line-height: 1.95; color: var(--ink-dim); margin-bottom: 12px; font-weight: 300; }
+  .card p strong, .card p em { color: var(--ink); font-style: normal; font-weight: 500; }
+  .card .fact {
+    margin-top: 18px; padding: 14px 18px; border-left: 2px solid var(--gold);
+    background: rgba(240, 198, 126, 0.07); font-size: 14.5px; line-height: 1.8;
+    color: var(--gold); border-radius: 0 10px 10px 0;
+  }
+
+  .hero { flex-direction: column; justify-content: center; text-align: center; align-items: center; }
+  .hero .kicker { letter-spacing: 0.5em; }
+  .hero h1 {
+    font-size: clamp(38px, 6.5vw, 82px); font-weight: 900; line-height: 1.15; margin: 18px 0 22px;
+    background: linear-gradient(160deg, #fff 30%, var(--gold) 75%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p { max-width: 620px; color: var(--ink-dim); font-size: 17px; line-height: 2; font-weight: 300; }
+  .cue { margin-top: 7vh; font-size: 12px; letter-spacing: 0.4em; color: var(--ink-dim); animation: bob 2.2s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+  .scale-tag {
+    position: fixed; left: 28px; bottom: 24px; z-index: 5;
+    font-size: 12.5px; letter-spacing: 0.2em; color: var(--ink-dim);
+    border: 1px solid rgba(240,198,126,0.2); border-radius: 999px;
+    padding: 8px 18px; background: rgba(8,10,22,0.55); backdrop-filter: blur(8px);
+  }
+  .scale-tag b { color: var(--gold); font-weight: 500; }
+
+  #voiceBtn {
+    position: fixed; right: 28px; bottom: 24px; z-index: 6;
+    font-family: inherit; font-size: 13px; letter-spacing: 0.15em;
+    color: var(--ink); background: rgba(8,10,22,0.7);
+    border: 1px solid rgba(240,198,126,0.35); border-radius: 999px;
+    padding: 10px 22px; cursor: pointer; backdrop-filter: blur(8px);
+    transition: all 0.3s;
+  }
+  #voiceBtn:hover { border-color: var(--gold); color: var(--gold); }
+  #voiceBtn.on { background: rgba(240,198,126,0.15); color: var(--gold); border-color: var(--gold); }
+
+  .label {
+    position: fixed; z-index: 3; pointer-events: none;
+    font-size: 12px; letter-spacing: 0.12em; color: var(--ink);
+    text-shadow: 0 0 8px rgba(0,0,0,0.9); white-space: nowrap;
+    transform: translate(-50%, -140%);
+    opacity: 0; transition: opacity 0.5s;
+  }
+  .label::after {
+    content: ""; position: absolute; left: 50%; top: 118%;
+    width: 1px; height: 14px; background: rgba(240,198,126,0.5);
+  }
+  .label b { color: var(--gold); font-weight: 500; }
+
+  nav#timeline {
+    position: fixed; right: 28px; top: 50%; transform: translateY(-50%);
+    z-index: 5; display: flex; flex-direction: column; gap: 18px;
+  }
+  nav#timeline a {
+    display: flex; align-items: center; gap: 10px; flex-direction: row-reverse;
+    text-decoration: none; color: var(--ink-dim); font-size: 12px; letter-spacing: 0.12em;
+    opacity: 0.55; transition: opacity 0.3s;
+  }
+  nav#timeline a .dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--gold-dim); background: transparent; transition: all 0.3s; flex: none; }
+  nav#timeline a.on { opacity: 1; color: var(--gold); }
+  nav#timeline a.on .dot { background: var(--gold); box-shadow: 0 0 12px var(--gold); }
+  nav#timeline a .lbl { opacity: 0; transform: translateX(6px); transition: all 0.3s; }
+  nav#timeline a:hover .lbl, nav#timeline a.on .lbl { opacity: 1; transform: translateX(0); }
+
+  #progressbar { position: fixed; top: 0; left: 0; height: 2px; width: 100%;
+    transform-origin: 0 50%; transform: scaleX(0);
+    background: linear-gradient(90deg, var(--gold), #ff9d5c); z-index: 10; }
+
+  footer { position: relative; z-index: 2; text-align: center; padding: 60px 20px 80px;
+    color: var(--ink-dim); font-size: 13px; letter-spacing: 0.15em; line-height: 2.2; }
+  footer .big { font-family: "Noto Serif SC", serif; font-size: clamp(20px, 2.6vw, 30px);
+    color: var(--ink); letter-spacing: 0.08em; margin-bottom: 16px; }
+  footer a { color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-dim); }
+
+  @media (max-width: 760px) {
+    section { padding: 14vh 6vw; justify-content: center !important; }
+    .card { padding: 32px 26px; }
+    nav#timeline { display: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div class="veil"></div>
+<div id="progressbar"></div>
+<div class="scale-tag" id="scaleTag">年代 · <b>公元前 3000 年</b></div>
+<button id="voiceBtn">🔊 开启配音解说</button>
+
+<nav id="timeline">
+  <a href="#h1" data-i="1"><span class="lbl">古代观天</span><span class="dot"></span></a>
+  <a href="#h2" data-i="2"><span class="lbl">哥白尼革命</span><span class="dot"></span></a>
+  <a href="#h3" data-i="3"><span class="lbl">望远镜与引力</span><span class="dot"></span></a>
+  <a href="#h4" data-i="4"><span class="lbl">丈量银河</span><span class="dot"></span></a>
+  <a href="#h5" data-i="5"><span class="lbl">哈勃革命</span><span class="dot"></span></a>
+  <a href="#h6" data-i="6"><span class="lbl">太空时代</span><span class="dot"></span></a>
+  <a href="#h7" data-i="7"><span class="lbl">新的窗口</span><span class="dot"></span></a>
+  <a href="#h8" data-i="8"><span class="lbl">未来</span><span class="dot"></span></a>
+</nav>
+
+<main>
+  <section class="hero" id="hero" data-voice="欢迎来到人类探索宇宙的历史。五千年来，我们从在巨石阵前仰望星空，到用万有引力预言海王星，再到听见十三亿光年外黑洞合并的引力波。这是一部好奇心的史诗。向下滚动，从五千年前的星空开始。">
+    <div class="kicker">FIVE THOUSAND YEARS OF LOOKING UP</div>
+    <h1>仰望星空五千年<br />人类如何认识宇宙</h1>
+    <p>我们了解了太阳系、银河系和宇宙本身。但这趟旅程还有最后一个篇章——我们自己的故事：人类如何从把星空当作神谕，一步步走向用方程和望远镜丈量宇宙。</p>
+    <div class="cue">SCROLL ▾</div>
+  </section>
+
+  <section id="h1" data-voice="第一章，古代观天。五千年前，索尔兹伯里平原上的巨石阵已经能对准夏至日出的方向。巴比伦人在泥板上记录金星的行踪，中国的甘德和石申编制了世界上最早的星表。公元一百五十年，托勒密集古代天文学之大成，提出地心说，地球静止在宇宙中心，日月星辰都绕着它转动。这个模型精巧而错误，却统治了人类一千五百年。一零五四年，中国司天监记录下白天可见的天关客星，那是一次超新星爆发，它的遗骸，就是今天的蟹状星云。">
+    <div class="card">
+      <div class="kicker">CHAPTER 01 · 公元前 3000 – 公元 150</div>
+      <h2>古代观天：星空是第一本日历</h2>
+      <p>约公元前 3000 年，<strong>巨石阵</strong>的主轴线已对准夏至日出方向。巴比伦人在泥板上记录金星周期，中国战国时期的《甘石星经》编制了世界最早的星表，记载了 800 多颗恒星。</p>
+      <p>公元 150 年，托勒密集大成提出<em>地心说</em>：地球静止于宇宙中心，行星沿"本轮—均轮"转动。模型精巧却能预测行星位置——于是这个错误的宇宙图景统治了 1500 年。</p>
+      <div class="fact">1054 年，宋代司天监记录了一颗白昼可见 23 天的"天关客星"——那是一次超新星爆发，其遗骸就是今天的蟹状星云。</div>
+    </div>
+  </section>
+
+  <section id="h2" data-voice="第二章，哥白尼革命。一千五百年后，一位波兰教士发现，如果让太阳居于中心，让地球像其他行星一样绕它转动，那些繁琐的本轮就可以大大简化。一五四三年，哥白尼在临终前出版了《天体运行论》。日心说一开始并不比地心说更精确，却更简洁，更接近真相。第谷用肉眼做出了史上最精密的天文观测，而他的助手开普勒将从中发现行星运动的真实规律。地球从宇宙的王座上走下来，成为一颗普通的行星，人类的世界观从此改变。">
+    <div class="card">
+      <div class="kicker">CHAPTER 02 · 1543</div>
+      <h2>哥白尼革命：地球走下王座</h2>
+      <p>1543 年，波兰教士哥白尼在临终之际出版《天体运行论》：<strong>太阳居于中心，地球只是一颗绕它公转的普通行星</strong>——繁琐的"本轮"体系顿时简化。</p>
+      <p>此后，第谷·布拉赫以肉眼做出了望远镜时代前最精密的观测，精度达 1 角分；他的助手开普勒将用这些数据发现行星运动三定律。布鲁诺因宣扬"宇宙无限、恒星皆太阳"被烧死在鲜花广场。</p>
+      <div class="fact">日心说起初并不比地心说更准——但科学史反复证明：更简洁、更统一的解释，往往更接近真相。</div>
+    </div>
+  </section>
+
+  <section id="h3" data-voice="第三章，望远镜与万有引力。一六零九年，伽利略把望远镜指向天空，人类第一次看见月球上的环形山、木星的四颗卫星和金星的相位变化，天体并不完美，也不都绕着地球转。开普勒发现行星沿椭圆轨道运行，面积速度守恒。一六八七年，牛顿发表《原理》，用同一条万有引力定律，解释了苹果落地和月球公转。这是人类历史上第一次，天上和地下被同一套物理学统一。天文学家甚至用引力方程算出了海王星的位置，笔尖上发现的行星。">
+    <div class="card">
+      <div class="kicker">CHAPTER 03 · 1609 – 1687</div>
+      <h2>望远镜与万有引力：天与地的统一</h2>
+      <p>1609 年，伽利略将望远镜指向天空：月球布满环形山、木星有四颗卫星、金星有完整相位——<strong>天体并不完美，也不都绕地球转</strong>。他因此被宗教裁判所审判，终身软禁。</p>
+      <p>开普勒发现行星沿<em>椭圆</em>轨道运行；1687 年牛顿发表《自然哲学的数学原理》：让苹果落地的力与牵引月球的力，是同一种力——万有引力。</p>
+      <div class="fact">1846 年，天文学家依据天王星轨道的异常，用笔算出未知行星的位置——海王星随后在预言位置 1° 内被发现："笔尖上的行星"。</div>
+    </div>
+  </section>
+
+  <section id="h4" data-voice="第四章，丈量银河。一七八一年，赫歇尔用自制的望远镜意外发现了天王星，太阳系的疆域一夜之间扩大了一倍。他用数星星的方法绘制出人类第一幅银河系地图，一个透镜形状的恒星系统。一八三八年，贝塞尔测出天鹅座六十一的周年视差，人类第一次量出了恒星的距离，十点三光年。宇宙突然变得无比巨大，光从那里出发时，火车还没有发明。">
+    <div class="card">
+      <div class="kicker">CHAPTER 04 · 1781 – 1838</div>
+      <h2>丈量银河：宇宙第一次有了尺寸</h2>
+      <p>1781 年，威廉·赫歇尔用自制反射望远镜发现<strong>天王星</strong>——太阳系疆域一夜翻倍。他系统巡天"数星星"，绘出人类第一幅银河系地图：一个透镜状的恒星系统，太阳靠近中心。</p>
+      <p>1838 年，贝塞尔测出天鹅座 61 的周年视差，人类首次量出恒星距离：<strong>10.3 光年</strong>。星光出发时，地球上还没有火车。</p>
+      <div class="fact">赫歇尔的妹妹卡罗琳也是杰出天文学家，发现了 8 颗彗星，是史上第一位获得薪水的女性科学家之一。</div>
+    </div>
+  </section>
+
+  <section id="h5" data-voice="第五章，哈勃革命。二十世纪二十年代，人类还认为银河系就是整个宇宙。一九二四年，哈勃在仙女座星云中找到了造父变星，证明它远在银河之外，是一个独立的星系。宇宙的大小一夜之间扩大了百亿倍。一九二九年，他又发现几乎所有星系都在远离我们，而且越远退行越快，宇宙在膨胀。如果倒放这部膨胀的电影，一切将汇聚于一个起点，大爆炸理论由此登上历史舞台。">
+    <div class="card">
+      <div class="kicker">CHAPTER 05 · 1924 – 1929</div>
+      <h2>哈勃革命：宇宙的尺度与膨胀</h2>
+      <p>1920 年代，主流观点仍认为银河系就是整个宇宙。1924 年，哈勃在仙女座星云中辨认出造父变星，算出它远在银河之外——<strong>"宇宙岛"被证实，宇宙的已知尺度一夜扩大百亿倍</strong>。</p>
+      <p>1929 年，哈勃发现星系的退行速度与距离成正比（哈勃定律）——宇宙在膨胀。倒放这部电影，万物将汇聚于一个起点：大爆炸理论由此奠基。</p>
+      <div class="fact">发现用的造父变星"周光关系"出自哈佛女天文学家勒维特——她是被历史长期低估的"测量宇宙的人"。</div>
+    </div>
+  </section>
+
+  <section id="h6" data-voice="第六章，太空时代。一九五七年，斯普特尼克一号的蜂鸣声从太空传回地球，人类正式进入太空时代。一九六一年，加加林成为第一个进入太空的人。一九六九年，阿波罗十一号登月，阿姆斯特朗在月面留下人类的第一个脚印，超过五亿人收看了直播。一九七七年，旅行者号携带刻录着人类文明的金唱片飞向星际空间。一九九零年，哈勃空间望远镜升空，让我们第一次看清了深空的细节。人类从仰望星空，走向了触摸星空。">
+    <div class="card">
+      <div class="kicker">CHAPTER 06 · 1957 – 1990</div>
+      <h2>太空时代：从仰望到抵达</h2>
+      <p>1957 年，<strong>斯普特尼克一号</strong>的蜂鸣声宣告太空时代开启；1961 年加加林首入太空；1969 年阿波罗 11 号登月，全球 5 亿人见证了那个"个人的一小步"。</p>
+      <p>1977 年发射的旅行者号携带<em>金唱片</em>——刻录着地球的声音、55 种语言的问候与人类文明的信息——如今已飞出日球层，成为最远的人造物。1990 年哈勃空间望远镜升空，把深空之美带给每个人。</p>
+      <div class="fact">1990 年，旅行者 1 号在 60 亿公里外回望，拍下著名的"暗淡蓝点"：地球只是悬浮在阳光中的一粒微尘。</div>
+    </div>
+  </section>
+
+  <section id="h7" data-voice="第七章，打开新的窗口。二零一五年，激光干涉引力波天文台探测到十三亿光年外两个黑洞合并激起的时空涟漪，爱因斯坦一百年前的预言被证实，人类第一次用听觉感知宇宙。二零一九年，事件视界望远镜发布了人类首张黑洞照片。二零二一年，韦布空间望远镜升空，看到了一百三十四亿年前宇宙婴儿时期的星系。如今，已确认的系外行星超过五千颗。光的每一种波段、引力波、中微子，人类打开了一扇又一扇观测宇宙的新窗口。">
+    <div class="card">
+      <div class="kicker">CHAPTER 07 · 2015 – 至今</div>
+      <h2>新的窗口：听见宇宙，看见时间</h2>
+      <p>2015 年，LIGO 探测到 13 亿光年外双黑洞合并的<strong>引力波</strong>——爱因斯坦百年前的预言成真，人类从此能"听见"宇宙。2019 年，事件视界望远镜发布首张黑洞照片。</p>
+      <p>2021 年升空的<em>韦布空间望远镜</em>看到了 134 亿年前婴儿宇宙的星系；已确认的系外行星超过 5700 颗。电磁波全波段、引力波、中微子、宇宙线——"多信使天文学"时代到来。</p>
+      <div class="fact">中国的"天眼"FAST（500 米口径射电望远镜）已发现超过 1000 颗脉冲星，是世界最灵敏的单口径射电望远镜。</div>
+    </div>
+  </section>
+
+  <section id="h8" data-voice="终章，未来。故事还没有结束。阿尔忒弥斯计划将送人类重返月球并建立常驻基地；载人火星任务正在酝酿，巨大的转运轨道将连接两颗行星。地面上，三十九米的极大望远镜即将睁开它的巨眼；太空中，探测器正飞向木卫二冰壳下的海洋寻找生命。卡尔·萨根说，在某个星球上，也许正有一个年轻的生命仰望星空，注视着我们。人类认知宇宙的历史，其实是宇宙通过我们，认识自己。系列旅程到此全部结束，感谢你一路的陪伴。">
+    <div class="card">
+      <div class="kicker">FINAL CHAPTER · 21 世纪中叶 →</div>
+      <h2>未来：成为多行星物种</h2>
+      <p>阿尔忒弥斯计划将送人类重返月球并建立月面基地；载人火星任务的霍曼转移轨道已在图纸上反复演练；39 米口径的欧洲极大望远镜（ELT）即将睁开巨眼；探测器正飞向木卫二冰壳下的海洋寻找生命。</p>
+      <p>从巨石阵到引力波，五千年里我们不断发现：<em>地球不是中心，太阳不是中心，银河系也不是中心</em>——每一次谦卑，都换来一个更宏大的宇宙。</p>
+      <div class="fact">卡尔·萨根："我们由恒星物质构成，我们生来就知道仰望星空。探索宇宙，就是宇宙认识它自己。"</div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="big">每一次把人类移出中心，都让世界变得更大</div>
+    巨石阵 → 日心说 → 万有引力 → 视差 → 宇宙膨胀 → 登月 → 引力波 → 星辰大海<br />
+    <a href="index.html">太阳系黄道面</a> · <a href="galaxy.html">银河漫游</a> · <a href="cosmos.html">宇宙简史</a> · <a href="missions.html">下一站：揽月探火 →</a>
+  </footer>
+</main>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from "three";
+
+const canvas = document.getElementById("scene");
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+} catch (e) {
+  const d = document.createElement("div");
+  d.style.cssText = "position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px;color:#e8eaf2;background:#03040a;font-size:15px;line-height:2";
+  d.textContent = "当前浏览器不支持 WebGL，无法渲染 3D 场景。请使用较新的 Chrome / Edge / Safari 并确保已开启硬件加速。";
+  document.body.appendChild(d);
+  throw e;
+}
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x03040a);
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.01, 3000);
+
+function makeGlowTexture() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 64;
+  const g = c.getContext("2d");
+  const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, "rgba(255,255,255,1)");
+  grad.addColorStop(0.35, "rgba(255,255,255,0.5)");
+  grad.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+}
+const glowTex = makeGlowTexture();
+
+function gauss() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const smooth01 = (t) => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
+const fade = (s, a, b, c, d) => smooth01((s - a) / (b - a)) * (1 - smooth01((s - c) / (d - c)));
+
+function dot(color, size) {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(new Float32Array([0, 0, 0]), 3));
+  return new THREE.Points(g, new THREE.PointsMaterial({
+    size, map: glowTex, color, transparent: true, depthWrite: false,
+    blending: THREE.AdditiveBlending
+  }));
+}
+function circleLine(r, color, opacity, segments = 96) {
+  const pts = [];
+  for (let i = 0; i <= segments; i++) {
+    const a = (i / segments) * Math.PI * 2;
+    pts.push(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r));
+  }
+  return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({ color, transparent: true, opacity }));
+}
+function lineOf(pts, color, opacity) {
+  return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({ color, transparent: true, opacity }));
+}
+
+function buildBgStars(count) {
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const r = 150 + Math.random() * 350;
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(2 * Math.random() - 1);
+    pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+    pos[i * 3 + 1] = Math.abs(r * Math.cos(ph)) * (Math.random() < 0.85 ? 1 : -1);
+    pos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  return new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 0.7, map: glowTex, color: 0xaab4dd, transparent: true, opacity: 0.5,
+    depthWrite: false, blending: THREE.AdditiveBlending
+  }));
+}
+const bgStars = buildBgStars(1500);
+scene.add(bgStars);
+
+const stoneGroup = new THREE.Group();
+{
+  const ground = new THREE.Mesh(
+    new THREE.CircleGeometry(14, 48),
+    new THREE.MeshBasicMaterial({ color: 0x0c1410, transparent: true, opacity: 0.9 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -2;
+  stoneGroup.add(ground);
+  for (let i = 0; i < 13; i++) {
+    const a = (i / 13) * Math.PI * 2;
+    const h = 1.6 + Math.sin(i * 3.7) * 0.3;
+    const stone = new THREE.Mesh(
+      new THREE.BoxGeometry(0.6, h, 0.35),
+      new THREE.MeshBasicMaterial({ color: 0x6a7060, transparent: true })
+    );
+    stone.position.set(Math.cos(a) * 5, -2 + h / 2, Math.sin(a) * 5);
+    stone.rotation.y = -a;
+    stoneGroup.add(stone);
+  }
+  const sunrise = dot(0xffd9a0, 1.4);
+  sunrise.position.set(0, -0.6, -13);
+  stoneGroup.add(sunrise);
+  const axis = lineOf([new THREE.Vector3(0, -1.9, 0), new THREE.Vector3(0, -1.9, -13)], 0xf0c67e, 0.3);
+  stoneGroup.add(axis);
+}
+stoneGroup.visible = false;
+scene.add(stoneGroup);
+
+const copGroup = new THREE.Group();
+let copPlanets = [];
+{
+  const sun = dot(0xffd080, 1.2);
+  copGroup.add(sun);
+  const radii = [1.6, 2.6, 3.8, 5.2, 6.8, 8.6];
+  const cols = [0xb8b0a6, 0xe8c07a, 0x6ea8e0, 0xe0785a, 0xe0a86e, 0x8ad8d0];
+  radii.forEach((r, i) => {
+    const ring = circleLine(r, 0xf0c67e, 0.18);
+    copGroup.add(ring);
+    const p = dot(cols[i], 0.5);
+    copGroup.add(p);
+    copPlanets.push({ obj: p, r, speed: 0.6 / Math.sqrt(r), phase: i * 1.7 });
+  });
+  const epiPts = [];
+  for (let i = 0; i <= 600; i++) {
+    const a = (i / 600) * Math.PI * 6;
+    epiPts.push(new THREE.Vector3(
+      Math.cos(a) * 4.4 + Math.cos(a * 5) * 1.1,
+      1.8,
+      Math.sin(a) * 4.4 + Math.sin(a * 5) * 1.1
+    ));
+  }
+  const epi = lineOf(epiPts, 0x9a6ad0, 0.35);
+  epi.name = "epicycle";
+  copGroup.add(epi);
+}
+copGroup.visible = false;
+scene.add(copGroup);
+
+const newtonGroup = new THREE.Group();
+let comet, funnel;
+{
+  const sun = dot(0xffe0a0, 1.1);
+  sun.position.set(-3.5, 0, 0);
+  newtonGroup.add(sun);
+  const orbitPts = [];
+  for (let i = 0; i <= 128; i++) {
+    const a = (i / 128) * Math.PI * 2;
+    orbitPts.push(new THREE.Vector3(-3.5 + Math.cos(a) * 7, 0, Math.sin(a) * 2.2));
+  }
+  newtonGroup.add(lineOf(orbitPts, 0xf0c67e, 0.25));
+  comet = dot(0xcfe8ff, 0.7);
+  newtonGroup.add(comet);
+  const rings = 24, segs = 48;
+  const fGeo = new THREE.BufferGeometry();
+  const fPos = new Float32Array((rings + 1) * (segs + 1) * 3);
+  const idx = [];
+  for (let ri = 0; ri <= rings; ri++) {
+    const r = 0.5 + ri * 0.28;
+    for (let si = 0; si <= segs; si++) {
+      const a = (si / segs) * Math.PI * 2;
+      const k = (ri * (segs + 1) + si) * 3;
+      fPos[k] = Math.cos(a) * r;
+      fPos[k + 1] = -2.2 / r;
+      fPos[k + 2] = Math.sin(a) * r;
+    }
+  }
+  for (let ri = 0; ri < rings; ri++) {
+    for (let si = 0; si < segs; si++) {
+      const a = ri * (segs + 1) + si, b = a + segs + 1;
+      idx.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+  fGeo.setAttribute("position", new THREE.BufferAttribute(fPos, 3));
+  fGeo.setIndex(idx);
+  funnel = new THREE.Mesh(fGeo, new THREE.MeshBasicMaterial({
+    color: 0x4a5ad0, wireframe: true, transparent: true, opacity: 0.25
+  }));
+  funnel.position.y = 0.5;
+  newtonGroup.add(funnel);
+}
+newtonGroup.visible = false;
+scene.add(newtonGroup);
+
+const herschelGroup = new THREE.Group();
+{
+  const fanN = 5000;
+  const fPos = new Float32Array(fanN * 3);
+  for (let i = 0; i < fanN; i++) {
+    const r = Math.pow(Math.random(), 0.6) * 11 + 0.4;
+    const a = (Math.random() - 0.5) * 1.1 + (Math.random() < 0.5 ? 0 : Math.PI * 0.9);
+    fPos[i * 3] = Math.cos(a) * r;
+    fPos[i * 3 + 1] = (Math.random() - 0.5) * (0.6 + r * 0.12);
+    fPos[i * 3 + 2] = Math.sin(a) * r;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(fPos, 3));
+  herschelGroup.add(new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 0.1, map: glowTex, color: 0xffe8c0, transparent: true, opacity: 0.8,
+    depthWrite: false, blending: THREE.AdditiveBlending
+  })));
+  const sun = dot(0xffd080, 0.7);
+  herschelGroup.add(sun);
+}
+herschelGroup.visible = false;
+scene.add(herschelGroup);
+
+const hubbleGroup = new THREE.Group();
+let hubbleDots, hubbleDirs, hubbleBaseR;
+{
+  const gN = 140;
+  const gPos = new Float32Array(gN * 3);
+  const gCol = new Float32Array(gN * 3);
+  hubbleDirs = new Float32Array(gN * 3);
+  hubbleBaseR = new Float32Array(gN);
+  const cNear = new THREE.Color(0xffffff), cFar = new THREE.Color(0xff5040);
+  const linePts = [];
+  for (let i = 0; i < gN; i++) {
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(2 * Math.random() - 1);
+    const r = 2 + Math.pow(Math.random(), 0.8) * 8;
+    hubbleBaseR[i] = r;
+    const dx = Math.sin(ph) * Math.cos(th), dy = Math.cos(ph), dz = Math.sin(ph) * Math.sin(th);
+    hubbleDirs[i * 3] = dx; hubbleDirs[i * 3 + 1] = dy; hubbleDirs[i * 3 + 2] = dz;
+    const c = cNear.clone().lerp(cFar, (r - 2) / 8);
+    gCol[i * 3] = c.r; gCol[i * 3 + 1] = c.g; gCol[i * 3 + 2] = c.b;
+    linePts.push(new THREE.Vector3(dx * r, dy * r, dz * r), new THREE.Vector3(dx * (r + r * 0.25), dy * (r + r * 0.25), dz * (r + r * 0.25)));
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(gPos, 3));
+  geo.setAttribute("color", new THREE.BufferAttribute(gCol, 3));
+  hubbleDots = new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 0.35, map: glowTex, vertexColors: true, transparent: true,
+    depthWrite: false, blending: THREE.AdditiveBlending
+  }));
+  hubbleGroup.add(hubbleDots);
+  const vlines = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(linePts),
+    new THREE.LineBasicMaterial({ color: 0xff6a50, transparent: true, opacity: 0.3 }));
+  vlines.name = "vlines";
+  hubbleGroup.add(vlines);
+  const us = dot(0x9ab8ff, 0.8);
+  hubbleGroup.add(us);
+}
+hubbleGroup.visible = false;
+scene.add(hubbleGroup);
+
+const spaceGroup = new THREE.Group();
+let satellite, shipDot, shipCurve;
+{
+  const earth = new THREE.Mesh(new THREE.SphereGeometry(2, 32, 24),
+    new THREE.MeshBasicMaterial({ color: 0x2a6ac8, transparent: true }));
+  earth.name = "earth";
+  spaceGroup.add(earth);
+  const earthGlow = dot(0x5a9ae0, 5);
+  spaceGroup.add(earthGlow);
+  const cloud = new THREE.Mesh(new THREE.SphereGeometry(2.03, 24, 18),
+    new THREE.MeshBasicMaterial({ color: 0xcfe0ff, wireframe: true, transparent: true, opacity: 0.15 }));
+  spaceGroup.add(cloud);
+  spaceGroup.add(circleLine(5.5, 0xf0c67e, 0.25));
+  satellite = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.22),
+    new THREE.MeshBasicMaterial({ color: 0xffe8c0, transparent: true }));
+  spaceGroup.add(satellite);
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(0.55, 20, 14),
+    new THREE.MeshBasicMaterial({ color: 0x9a9a92, transparent: true }));
+  moon.position.set(9, 1.5, -6);
+  moon.name = "moon";
+  spaceGroup.add(moon);
+  const moonGlow = dot(0xd0d0c8, 1.4);
+  moonGlow.position.copy(moon.position);
+  spaceGroup.add(moonGlow);
+  shipCurve = new THREE.QuadraticBezierCurve3(
+    new THREE.Vector3(1.4, 1.4, 0.6),
+    new THREE.Vector3(6, 5.5, -2),
+    new THREE.Vector3(8.6, 1.9, -5.6)
+  );
+  const trail = new THREE.Line(new THREE.BufferGeometry().setFromPoints(shipCurve.getPoints(80)),
+    new THREE.LineBasicMaterial({ color: 0xf0c67e, transparent: true, opacity: 0.4 }));
+  trail.name = "trail";
+  spaceGroup.add(trail);
+  shipDot = dot(0xffe8c0, 0.6);
+  spaceGroup.add(shipDot);
+}
+spaceGroup.visible = false;
+scene.add(spaceGroup);
+
+const gwGroup = new THREE.Group();
+let gwPlane, gwA, gwB;
+{
+  const size = 22, seg = 56;
+  const pGeo = new THREE.PlaneGeometry(size, size, seg, seg);
+  gwPlane = new THREE.Mesh(pGeo, new THREE.MeshBasicMaterial({
+    color: 0x5a6ae0, wireframe: true, transparent: true, opacity: 0.35
+  }));
+  gwPlane.rotation.x = -Math.PI / 2;
+  gwGroup.add(gwPlane);
+  gwA = dot(0xffffff, 0.5);
+  gwB = dot(0xffffff, 0.5);
+  gwGroup.add(gwA);
+  gwGroup.add(gwB);
+}
+gwGroup.visible = false;
+scene.add(gwGroup);
+
+const marsGroup = new THREE.Group();
+let marsShip, marsCurve;
+{
+  const mars = new THREE.Mesh(new THREE.SphereGeometry(2.6, 32, 24),
+    new THREE.MeshBasicMaterial({ color: 0xc8542a, transparent: true }));
+  mars.position.set(4, 0, 0);
+  marsGroup.add(mars);
+  const marsGlow = dot(0xe0785a, 6);
+  marsGlow.position.copy(mars.position);
+  marsGroup.add(marsGlow);
+  for (let i = 0; i < 6; i++) {
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+      new THREE.MeshBasicMaterial({ color: 0xffe8c0, transparent: true, opacity: 0.9 }));
+    const a = i * 1.1, b = 0.5 + (i % 3) * 0.3;
+    dome.position.set(4 + Math.cos(a) * 2.62 * Math.cos(b), Math.sin(b) * 2.62, Math.sin(a) * 2.62 * Math.cos(b));
+    marsGroup.add(dome);
+  }
+  const earth = new THREE.Mesh(new THREE.SphereGeometry(1.1, 24, 18),
+    new THREE.MeshBasicMaterial({ color: 0x2a6ac8, transparent: true }));
+  earth.position.set(-7, 2, -3);
+  marsGroup.add(earth);
+  const eg = dot(0x5a9ae0, 2.6);
+  eg.position.copy(earth.position);
+  marsGroup.add(eg);
+  marsCurve = new THREE.QuadraticBezierCurve3(
+    new THREE.Vector3(-6.4, 1.7, -2.7),
+    new THREE.Vector3(-2, -5, 3),
+    new THREE.Vector3(3.2, -1.4, 1.2)
+  );
+  marsGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(marsCurve.getPoints(80)),
+    new THREE.LineBasicMaterial({ color: 0xf0c67e, transparent: true, opacity: 0.4 })));
+  marsShip = dot(0xffe8c0, 0.55);
+  marsGroup.add(marsShip);
+}
+marsGroup.visible = false;
+scene.add(marsGroup);
+
+const keys = [
+  { pos: [0, 1.5, 10], look: [0, 0, 0], time: "公元前 3000 年" },
+  { pos: [0, 0.5, 12], look: [0, -1, -3], time: "公元前 3000 年" },
+  { pos: [0, 9, 6], look: [0, 0, 0], time: "1543 年" },
+  { pos: [3, 4, 11], look: [-1.5, 0, 0], time: "1609 – 1687" },
+  { pos: [6, 5, 10], look: [1, 0, 0], time: "1781 – 1838" },
+  { pos: [0, 3, 14], look: [0, 0, 0], time: "1924 – 1929" },
+  { pos: [4, 3, 10], look: [1.5, 0.3, -1], time: "1957 – 1990" },
+  { pos: [0, 8, 12], look: [0, 0, 0], time: "2015 – 至今" },
+  { pos: [0, 3, 12], look: [0, 0, 0], time: "21 世纪中叶 →" }
+];
+
+let stage = 0;
+function computeStage() {
+  const doc = document.documentElement;
+  const max = doc.scrollHeight - innerHeight;
+  const p = max > 0 ? scrollY / max : 0;
+  stage = clamp(p * (keys.length + 1) - 0.6, 0, keys.length - 1 + 0.4);
+  document.getElementById("progressbar").style.transform = "scaleX(" + p + ")";
+  const idx = clamp(Math.round(stage), 0, keys.length - 1);
+  document.getElementById("scaleTag").innerHTML = "年代 · <b>" + keys[idx].time + "</b>";
+}
+addEventListener("scroll", computeStage, { passive: true });
+computeStage();
+
+const labels = [
+  { el: null, text: "<b>巨石阵</b> · 对准夏至日出", pos: new THREE.Vector3(0, 0.5, -5), range: [0.6, 1.6] },
+  { el: null, text: "<b>本轮-均轮</b>（地心说）", pos: new THREE.Vector3(0, 2.6, 0), range: [1.5, 2.6] },
+  { el: null, text: "<b>引力阱</b> · F = GMm/r²", pos: new THREE.Vector3(0, -1, 0), range: [2.5, 3.6] },
+  { el: null, text: "<b>赫歇尔的银河地图</b>", pos: new THREE.Vector3(2, 2, 0), range: [3.5, 4.6] },
+  { el: null, text: "<b>红移</b> · 越远退行越快", pos: new THREE.Vector3(0, 4, 0), range: [4.5, 5.6] },
+  { el: null, text: "<b>地月转移轨道</b>", pos: new THREE.Vector3(4, 3, -2), range: [5.5, 6.6] },
+  { el: null, text: "<b>引力波</b> · 时空的涟漪", pos: new THREE.Vector3(0, 3, 0), range: [6.5, 7.6] },
+  { el: null, text: "<b>火星前哨</b>", pos: new THREE.Vector3(4, 3.2, 0), range: [7.5, 9] }
+];
+labels.forEach((l) => {
+  const d = document.createElement("div");
+  d.className = "label";
+  d.innerHTML = l.text;
+  document.body.appendChild(d);
+  l.el = d;
+});
+
+const sections = document.querySelectorAll("section[id^='h']");
+const links = document.querySelectorAll("nav#timeline a");
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((e) => {
+    if (e.isIntersecting) {
+      sections.forEach((s) => s.classList.toggle("active", s === e.target));
+      links.forEach((l) => l.classList.toggle("on", l.getAttribute("href") === "#" + e.target.id));
+      const v = e.target.dataset.voice;
+      if (v) speak(v);
+    }
+  });
+}, { threshold: 0.45 });
+sections.forEach((s) => io.observe(s));
+io.observe(document.getElementById("hero"));
+
+let voiceOn = false;
+const voiceBtn = document.getElementById("voiceBtn");
+function speak(text) {
+  if (!voiceOn || !("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "zh-CN";
+  u.rate = 0.95;
+  u.pitch = 1;
+  const voices = speechSynthesis.getVoices();
+  const zh = voices.find((v) => v.lang.replace("_", "-").startsWith("zh"));
+  if (zh) u.voice = zh;
+  speechSynthesis.speak(u);
+}
+voiceBtn.addEventListener("click", () => {
+  voiceOn = !voiceOn;
+  voiceBtn.classList.toggle("on", voiceOn);
+  voiceBtn.textContent = voiceOn ? "🔇 关闭配音解说" : "🔊 开启配音解说";
+  if (voiceOn) {
+    const active = document.querySelector("section.active") || document.getElementById("hero");
+    speak(active.dataset.voice || "");
+  } else {
+    speechSynthesis.cancel();
+  }
+});
+if ("speechSynthesis" in window) speechSynthesis.getVoices();
+
+const v3a = new THREE.Vector3(), v3b = new THREE.Vector3();
+const curPos = new THREE.Vector3().fromArray(keys[0].pos);
+const curLook = new THREE.Vector3().fromArray(keys[0].look);
+
+function setGroupOpacity(group, o) {
+  group.visible = o > 0.01;
+  group.traverse((obj) => {
+    if (obj.material && obj.material.transparent) {
+      if (obj.userData.baseOpacity == null) obj.userData.baseOpacity = obj.material.opacity;
+      obj.material.opacity = obj.userData.baseOpacity * o;
+    }
+  });
+}
+
+function frame(now) {
+  const t = now / 1000;
+
+  const s = clamp(stage, 0, keys.length - 1);
+  const i = Math.floor(s);
+  const j = Math.min(i + 1, keys.length - 1);
+  const f = smooth01(s - i);
+  v3a.fromArray(keys[i].pos).lerp(v3b.fromArray(keys[j].pos), f);
+  const lx = keys[i].look[0] + (keys[j].look[0] - keys[i].look[0]) * f;
+  const ly = keys[i].look[1] + (keys[j].look[1] - keys[i].look[1]) * f;
+  const lz = keys[i].look[2] + (keys[j].look[2] - keys[i].look[2]) * f;
+  v3a.x += Math.sin(t * 0.3) * 0.08;
+  v3a.y += Math.cos(t * 0.22) * 0.06;
+  curPos.lerp(v3a, 0.06);
+  curLook.lerp(new THREE.Vector3(lx, ly, lz), 0.06);
+  camera.position.copy(curPos);
+  camera.lookAt(curLook);
+
+  setGroupOpacity(stoneGroup, fade(stage, 0, 0.4, 1.5, 2.1));
+  bgStars.rotation.y = t * 0.004;
+
+  const copO = fade(stage, 1.3, 2.0, 2.5, 3.1);
+  setGroupOpacity(copGroup, copO);
+  copPlanets.forEach((p) => {
+    const a = t * p.speed + p.phase;
+    p.obj.position.set(Math.cos(a) * p.r, 0, Math.sin(a) * p.r);
+  });
+  const epi = copGroup.getObjectByName("epicycle");
+  if (epi) epi.userData.baseOpacity = 0.35 * (0.5 + 0.5 * Math.sin(t * 0.8));
+
+  const newO = fade(stage, 2.3, 3.0, 3.5, 4.1);
+  setGroupOpacity(newtonGroup, newO);
+  {
+    const a = t * 0.9;
+    const r = 7 * (1 - 0.85 * 0.85) / (1 + 0.85 * Math.cos(a));
+    comet.position.set(-3.5 + Math.cos(a) * r, 0, Math.sin(a) * r * (2.2 / 7));
+    funnel.rotation.y = t * 0.1;
+  }
+
+  const herO = fade(stage, 3.3, 4.0, 4.5, 5.1);
+  setGroupOpacity(herschelGroup, herO);
+  herschelGroup.rotation.y = t * 0.05;
+
+  const hubO = fade(stage, 4.3, 5.0, 5.5, 6.1);
+  setGroupOpacity(hubbleGroup, hubO);
+  {
+    const expand = 1 + 0.35 * Math.sin(t * 0.5);
+    const p = hubbleDots.geometry.attributes.position.array;
+    for (let k = 0; k < hubbleBaseR.length; k++) {
+      const r = hubbleBaseR[k] * expand;
+      p[k * 3] = hubbleDirs[k * 3] * r;
+      p[k * 3 + 1] = hubbleDirs[k * 3 + 1] * r;
+      p[k * 3 + 2] = hubbleDirs[k * 3 + 2] * r;
+    }
+    hubbleDots.geometry.attributes.position.needsUpdate = true;
+  }
+
+  const spO = fade(stage, 5.3, 6.0, 6.5, 7.1);
+  setGroupOpacity(spaceGroup, spO);
+  {
+    const a = t * 1.2;
+    satellite.position.set(Math.cos(a) * 5.5, Math.sin(a) * 1.4, Math.sin(a) * 5.5);
+    const ship = spaceGroup.getObjectByName ? shipDot : null;
+    const prog = (t * 0.15) % 1;
+    shipDot.position.copy(shipCurve.getPoint(prog));
+    spaceGroup.getObjectByName("earth").rotation.y = t * 0.2;
+  }
+
+  const gwO = fade(stage, 6.3, 7.0, 7.5, 8.1);
+  setGroupOpacity(gwGroup, gwO);
+  {
+    const cyc = (t * 0.25) % 1;
+    const sep = 4 * (1 - cyc) + 0.4;
+    const ang = t * (2 + cyc * 6);
+    gwA.position.set(Math.cos(ang) * sep / 2, 0, Math.sin(ang) * sep / 2);
+    gwB.position.set(-Math.cos(ang) * sep / 2, 0, -Math.sin(ang) * sep / 2);
+    const pos = gwPlane.geometry.attributes.position;
+    const amp = 0.15 + cyc * 0.55;
+    for (let k = 0; k < pos.count; k++) {
+      const x = pos.getX(k), y = pos.getY(k);
+      const r = Math.sqrt(x * x + y * y);
+      pos.setZ(k, Math.sin(r * 1.6 - t * 6) * amp / (1 + r * 0.35));
+    }
+    pos.needsUpdate = true;
+  }
+
+  const marsO = fade(stage, 7.3, 8.0, 8.8, 9.4);
+  setGroupOpacity(marsGroup, marsO);
+  {
+    const prog = (t * 0.12) % 1;
+    marsShip.position.copy(marsCurve.getPoint(prog));
+  }
+
+  labels.forEach((l) => {
+    const inRange = stage >= l.range[0] && stage <= l.range[1];
+    if (!inRange) { l.el.style.opacity = 0; return; }
+    const p = l.pos.clone().project(camera);
+    if (p.z > 1) { l.el.style.opacity = 0; return; }
+    l.el.style.left = (p.x * 0.5 + 0.5) * innerWidth + "px";
+    l.el.style.top = (-p.y * 0.5 + 0.5) * innerHeight + "px";
+    l.el.style.opacity = 1;
+  });
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

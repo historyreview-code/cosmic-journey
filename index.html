@@ -193,14 +193,14 @@
 </nav>
 
 <main>
-  <section class="hero" id="hero">
+  <section class="hero" id="hero" data-voice-src="audio/index-hero.mp3" data-voice-dur="21.8"
     <div class="kicker">46 亿 年 前 的 一 朵 云</div>
     <h1>黄道面之谜<br />太阳系为何是一个平面</h1>
     <p>水星、金星、地球、火星……八颗行星的轨道几乎躺在同一张“薄片”上。这不是巧合，而是一场由引力与角动量共同导演的宇宙演化。向下滚动，回到太阳诞生之前。</p>
     <div class="cue">SCROLL ▾</div>
   </section>
 
-  <section id="s1">
+  <section id="s1" data-voice-src="audio/index-s1.mp3" data-voice-dur="18.7"
     <div class="card">
       <div class="kicker">STAGE 01 · 起点</div>
       <h2>太阳星云：一朵缓缓旋转的气体和尘埃</h2>
@@ -210,7 +210,7 @@
     </div>
   </section>
 
-  <section id="s2">
+  <section id="s2" data-voice-src="audio/index-s2.mp3" data-voice-dur="18.6"
     <div class="card">
       <div class="kicker">STAGE 02 · 坍缩加速</div>
       <h2>角动量守恒：越缩越快的旋转</h2>
@@ -220,7 +220,7 @@
     </div>
   </section>
 
-  <section id="s3">
+  <section id="s3" data-voice-src="audio/index-s3.mp3" data-voice-dur="10.8"
     <div class="card">
       <div class="kicker">STAGE 03 · 扁平化</div>
       <h2>离心力 vs 引力：云团被甩成一张盘</h2>
@@ -230,7 +230,7 @@
     </div>
   </section>
 
-  <section id="s4">
+  <section id="s4" data-voice-src="audio/index-s4.mp3" data-voice-dur="20.3"
     <div class="card">
       <div class="kicker">STAGE 04 · 建造行星</div>
       <h2>碰撞吸积：从尘埃到行星</h2>
@@ -240,7 +240,7 @@
     </div>
   </section>
 
-  <section id="s5">
+  <section id="s5" data-voice-src="audio/index-s5.mp3" data-voice-dur="18.7"
     <div class="card">
       <div class="kicker">STAGE 05 · 答案揭晓</div>
       <h2>黄道面：行星们共同继承的平面</h2>
@@ -250,7 +250,7 @@
     </div>
   </section>
 
-  <section id="s6">
+  <section id="s6" data-voice-src="audio/index-s6.mp3" data-voice-dur="24.0"
     <div class="card">
       <div class="kicker">STAGE 06 · 例外证明规律</div>
       <h2>冥王星：一条倾斜了 17° 的轨道</h2>
@@ -325,17 +325,6 @@ function computeStage() {
 window.addEventListener("scroll", computeStage, { passive: true });
 computeStage();
 
-const sections = document.querySelectorAll("section[id^='s']");
-const links = document.querySelectorAll("nav#timeline a");
-const io = new IntersectionObserver((entries) => {
-  entries.forEach((e) => {
-    if (e.isIntersecting) {
-      sections.forEach((s) => s.classList.toggle("active", s === e.target));
-      links.forEach((l) => l.classList.toggle("on", l.getAttribute("href") === "#" + e.target.id));
-    }
-  });
-}, { threshold: 0.45 });
-sections.forEach((s) => io.observe(s));
 
 let T = 0, last = performance.now();
 
@@ -481,5 +470,98 @@ function draw(now) {
 }
 requestAnimationFrame(draw);
 </script>
+<style>
+#voiceBtn{position:fixed;top:18px;right:22px;z-index:60;padding:8px 16px;border-radius:999px;border:1px solid rgba(216,180,90,.55);background:rgba(10,13,24,.74);color:#f0d68a;font-size:13px;cursor:pointer;backdrop-filter:blur(8px)}
+#voiceBtn.on{background:rgba(240,198,126,.18)}
+@media (max-width:760px){#voiceBtn{top:10px;right:10px;padding:6px 12px;font-size:12px}}
+</style>
+<button id="voiceBtn">🔊 开启配音解说</button>
+<script>
+const SECTIONS = document.querySelectorAll("main section[id]");
+const LINKS = document.querySelectorAll("nav#timeline a");
+let voiceOn = false;
+const voiceBtn = document.getElementById("voiceBtn");
+let voiceAudio = null;
+function speak(src) {
+  if (!voiceOn || !src) return;
+  try {
+    if (voiceAudio) { voiceAudio.pause(); voiceAudio = null; }
+    voiceAudio = new Audio(src);
+    const p = voiceAudio.play();
+    if (p && p.catch) p.catch(function () {});
+  } catch (e) {}
+}
+function setVoice(on) {
+  voiceOn = on;
+  if (voiceBtn) {
+    voiceBtn.classList.toggle("on", on);
+    voiceBtn.textContent = on ? "🔇 关闭配音解说" : "🔊 开启配音解说";
+  }
+  if (!on && voiceAudio) { voiceAudio.pause(); voiceAudio = null; }
+  if (on) {
+    const active = document.querySelector("main section.active") || document.getElementById("hero");
+    speak(active ? active.dataset.voiceSrc : "");
+  }
+}
+if (voiceBtn) voiceBtn.addEventListener("click", function () { setVoice(!voiceOn); });
+
+// === 放映厅自动播放模式 (?autoplay=1): 逐章自动滚动+配音, 本集结束通知父窗口 ===
+var AUTO = new URLSearchParams(location.search).get("autoplay") === "1";
+var autoPaused = false;
+var advanceTimer = null;
+function scheduleAutoAdvance(section) {
+  if (!AUTO || autoPaused) return;
+  if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
+  var dur = parseFloat(section.dataset.voiceDur || "15");
+  var next = section.nextElementSibling;
+  var isLast = !next || next.tagName !== "SECTION";
+  advanceTimer = setTimeout(function () {
+    if (isLast) {
+      if (window.parent !== window) window.parent.postMessage({ type: "episode-done" }, "*");
+      else location.href = "galaxy.html?autoplay=1";
+    } else {
+      next.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, (dur + 4) * 1000);
+}
+var io = new IntersectionObserver(function (entries) {
+  entries.forEach(function (e) {
+    if (e.isIntersecting) {
+      SECTIONS.forEach(function (s) { s.classList.toggle("active", s === e.target); });
+      LINKS.forEach(function (l) { l.classList.toggle("on", l.getAttribute("href") === "#" + e.target.id); });
+      var v = e.target.dataset.voiceSrc;
+      if (v) { speak(v); scheduleAutoAdvance(e.target); }
+    }
+  });
+}, { threshold: 0.45 });
+SECTIONS.forEach(function (s) { io.observe(s); });
+if (AUTO) {
+  setVoice(true);
+  window.addEventListener("message", function (e) {
+    if (e.data && e.data.type === "autoplay") {
+      autoPaused = !e.data.on;
+      if (autoPaused && advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
+      if (!autoPaused) {
+        var act = document.querySelector("main section.active");
+        if (act) scheduleAutoAdvance(act);
+      }
+    }
+  });
+}
+
+</script>
+
+<nav class="ep-nav" aria-label="剧集导航">
+  <a class="ep-btn" href="https://shuzidiantang.com/cosmos/">‹ 上一集</a>
+  <a class="ep-btn ep-home" href="https://shuzidiantang.com/cosmos/" target="_top">⛩ 天文馆</a>
+  <a class="ep-btn" href="galaxy.html">下一集 ›</a>
+</nav>
+<style>
+.ep-nav{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:10px;z-index:999;}
+.ep-btn{display:inline-block;padding:9px 16px;border-radius:999px;border:1px solid rgba(216,180,90,.55);background:rgba(10,13,24,.74);color:#f0d68a;font-size:13px;letter-spacing:.05em;text-decoration:none;backdrop-filter:blur(8px);}
+.ep-btn:hover{background:rgba(216,180,90,.22)}
+@media (max-width:760px){.ep-nav{gap:6px;bottom:10px}.ep-btn{padding:8px 11px;font-size:12px}}
+</style>
+
 </body>
 </html>

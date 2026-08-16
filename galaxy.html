@@ -623,9 +623,9 @@ addEventListener("resize", () => {
 </script>
 
 <nav class="ep-nav" aria-label="剧集导航">
-  <a class="ep-btn" href="index.html">‹ 上一集</a>
+  <a class="ep-btn" href="index.html" data-dir="prev">‹ 上一集</a>
   <a class="ep-btn ep-home" href="https://shuzidiantang.com/cosmos/" target="_top">⛩ 天文馆</a>
-  <a class="ep-btn" href="cosmos.html">下一集 ›</a>
+  <a class="ep-btn" href="cosmos.html?autoplay=1" data-dir="next">下一集 ›</a>
 </nav>
 <style>
 .ep-nav{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:10px;z-index:999;}
@@ -634,5 +634,15 @@ addEventListener("resize", () => {
 @media (max-width:760px){.ep-nav{gap:6px;bottom:10px}.ep-btn{padding:8px 11px;font-size:12px}}
 </style>
 
+<script>
+document.querySelectorAll(".ep-nav a[data-dir]").forEach(function (a) {
+  a.addEventListener("click", function (e) {
+    if (window.parent !== window) {
+      e.preventDefault();
+      window.parent.postMessage({ type: "goto", dir: a.getAttribute("data-dir") }, "*");
+    }
+  });
+});
+</script>
 </body>
 </html>

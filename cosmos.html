@@ -10,8 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;900&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --gold: #f0c67e;
-    --gold-dim: rgba(240, 198, 126, 0.35);
+    --gold: #3fe0ff;
+    --gold-dim: rgba(63, 224, 255, 0.35);
     --ink: #e8eaf2;
     --ink-dim: rgba(232, 234, 242, 0.62);
     --bg: #020308;
@@ -30,7 +30,7 @@
   .card {
     max-width: 560px;
     background: rgba(7, 9, 20, 0.6);
-    border: 1px solid rgba(240, 198, 126, 0.16);
+    border: 1px solid rgba(63, 224, 255, 0.16);
     border-radius: 18px;
     padding: 44px 48px;
     backdrop-filter: blur(14px);
@@ -47,7 +47,7 @@
   .card p strong, .card p em { color: var(--ink); font-style: normal; font-weight: 500; }
   .card .fact {
     margin-top: 18px; padding: 14px 18px; border-left: 2px solid var(--gold);
-    background: rgba(240, 198, 126, 0.07); font-size: 14.5px; line-height: 1.8;
+    background: rgba(63, 224, 255, 0.07); font-size: 14.5px; line-height: 1.8;
     color: var(--gold); border-radius: 0 10px 10px 0;
   }
 
@@ -55,7 +55,7 @@
   .hero .kicker { letter-spacing: 0.5em; }
   .hero h1 {
     font-size: clamp(40px, 7vw, 88px); font-weight: 900; line-height: 1.15; margin: 18px 0 22px;
-    background: linear-gradient(160deg, #fff 30%, var(--gold) 75%);
+    background: linear-gradient(160deg, #eefaff 30%, var(--gold) 75%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   .hero p { max-width: 620px; color: var(--ink-dim); font-size: 17px; line-height: 2; font-weight: 300; }
@@ -65,7 +65,7 @@
   .scale-tag {
     position: fixed; left: 28px; bottom: 24px; z-index: 5;
     font-size: 12.5px; letter-spacing: 0.2em; color: var(--ink-dim);
-    border: 1px solid rgba(240,198,126,0.2); border-radius: 999px;
+    border: 1px solid rgba(63,224,255,0.2); border-radius: 999px;
     padding: 8px 18px; background: rgba(7,9,20,0.55); backdrop-filter: blur(8px);
   }
   .scale-tag b { color: var(--gold); font-weight: 500; }
@@ -74,12 +74,12 @@
     position: fixed; right: 28px; bottom: 24px; z-index: 6;
     font-family: inherit; font-size: 13px; letter-spacing: 0.15em;
     color: var(--ink); background: rgba(7,9,20,0.7);
-    border: 1px solid rgba(240,198,126,0.35); border-radius: 999px;
+    border: 1px solid rgba(63,224,255,0.35); border-radius: 999px;
     padding: 10px 22px; cursor: pointer; backdrop-filter: blur(8px);
     transition: all 0.3s;
   }
   #voiceBtn:hover { border-color: var(--gold); color: var(--gold); }
-  #voiceBtn.on { background: rgba(240,198,126,0.15); color: var(--gold); border-color: var(--gold); }
+  #voiceBtn.on { background: rgba(63,224,255,0.15); color: var(--gold); border-color: var(--gold); }
 
   .label {
     position: fixed; z-index: 3; pointer-events: none;
@@ -90,7 +90,7 @@
   }
   .label::after {
     content: ""; position: absolute; left: 50%; top: 118%;
-    width: 1px; height: 14px; background: rgba(240,198,126,0.5);
+    width: 1px; height: 14px; background: rgba(63,224,255,0.5);
   }
   .label b { color: var(--gold); font-weight: 500; }
 
@@ -111,7 +111,7 @@
 
   #progressbar { position: fixed; top: 0; left: 0; height: 2px; width: 100%;
     transform-origin: 0 50%; transform: scaleX(0);
-    background: linear-gradient(90deg, var(--gold), #ff9d5c); z-index: 10; }
+    background: linear-gradient(90deg, var(--gold), #7c6cff); z-index: 10; }
 
   footer { position: relative; z-index: 2; text-align: center; padding: 60px 20px 80px;
     color: var(--ink-dim); font-size: 13px; letter-spacing: 0.15em; line-height: 2.2; }
@@ -141,7 +141,7 @@ body.cinema .card h2 {
   font-size: clamp(30px, 4.6vw, 58px);
   line-height: 1.4;
   margin: 0;
-  background: linear-gradient(160deg, #fff 30%, var(--gold) 78%);
+  background: linear-gradient(160deg, #eefaff 30%, var(--gold) 78%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -852,8 +852,8 @@ addEventListener("resize", () => {
 </nav>
 <style>
 .ep-nav{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:10px;z-index:999;}
-.ep-btn{display:inline-block;padding:9px 16px;border-radius:999px;border:1px solid rgba(216,180,90,.55);background:rgba(10,13,24,.74);color:#f0d68a;font-size:13px;letter-spacing:.05em;text-decoration:none;backdrop-filter:blur(8px);}
-.ep-btn:hover{background:rgba(216,180,90,.22)}
+.ep-btn{display:inline-block;padding:9px 16px;border-radius:999px;border:1px solid rgba(63,224,255,.55);background:rgba(10,13,24,.74);color:#9fe8ff;font-size:13px;letter-spacing:.05em;text-decoration:none;backdrop-filter:blur(8px);}
+.ep-btn:hover{background:rgba(63,224,255,.22)}
 @media (max-width:760px){.ep-nav{gap:6px;bottom:10px}.ep-btn{padding:8px 11px;font-size:12px}}
 </style>
 

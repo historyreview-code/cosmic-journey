@@ -10,8 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@600;900&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --gold: #f0c67e;
-    --gold-dim: rgba(240, 198, 126, 0.35);
+    --gold: #3fe0ff;
+    --gold-dim: rgba(63, 224, 255, 0.35);
     --ink: #e8eaf2;
     --ink-dim: rgba(232, 234, 242, 0.62);
     --bg: #05060f;
@@ -51,7 +51,7 @@
   .card {
     max-width: 560px;
     background: rgba(10, 13, 28, 0.62);
-    border: 1px solid rgba(240, 198, 126, 0.16);
+    border: 1px solid rgba(63, 224, 255, 0.16);
     border-radius: 18px;
     padding: 44px 48px;
     backdrop-filter: blur(14px);
@@ -78,7 +78,7 @@
     margin-top: 18px;
     padding: 14px 18px;
     border-left: 2px solid var(--gold);
-    background: rgba(240, 198, 126, 0.07);
+    background: rgba(63, 224, 255, 0.07);
     font-size: 14.5px;
     line-height: 1.8;
     color: var(--gold);
@@ -92,7 +92,7 @@
     font-weight: 900;
     line-height: 1.15;
     margin: 18px 0 22px;
-    background: linear-gradient(160deg, #fff 30%, var(--gold) 75%);
+    background: linear-gradient(160deg, #eefaff 30%, var(--gold) 75%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -149,7 +149,7 @@
     width: 100%;
     transform-origin: 0 50%;
     transform: scaleX(0);
-    background: linear-gradient(90deg, var(--gold), #ff9d5c);
+    background: linear-gradient(90deg, var(--gold), #7c6cff);
     z-index: 10;
   }
 
@@ -193,7 +193,7 @@ body.cinema .card h2 {
   font-size: clamp(30px, 4.6vw, 58px);
   line-height: 1.4;
   margin: 0;
-  background: linear-gradient(160deg, #fff 30%, var(--gold) 78%);
+  background: linear-gradient(160deg, #eefaff 30%, var(--gold) 78%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -290,7 +290,7 @@ body.cinema nav#timeline, body.cinema #voiceBtn { display: none; }
     <div class="big">一张盘的遗产，写在每颗行星的轨道上</div>
     引力让它坍缩 · 角动量让它旋转 · 离心力让它扁平 · 碰撞让它成星<br />
     ECLIPTIC PLANE · THE STORY OF OUR SOLAR SYSTEM<br />
-    <a href="galaxy.html" style="color:#f0c67e;text-decoration:none;border-bottom:1px solid rgba(240,198,126,0.35)">下一站：3D 银河漫游 →</a>
+    <a href="galaxy.html" style="color:#3fe0ff;text-decoration:none;border-bottom:1px solid rgba(63,224,255,0.35)">下一站：3D 银河漫游 →</a>
   </footer>
 </main>
 
@@ -439,7 +439,7 @@ function draw(now) {
     for (let k = 0; k < 8; k++) {
       const ring = ringR[k] * RMAX * mix(1, shrink, 0.4);
       ctx.globalAlpha = orbitW * 0.28 * (1 - fadeW * 0.2);
-      ctx.strokeStyle = "#f0c67e";
+      ctx.strokeStyle = "#3fe0ff";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.ellipse(CX, CY, ring, ring * yFlat, 0, 0, Math.PI * 2);
@@ -497,8 +497,8 @@ function draw(now) {
 requestAnimationFrame(draw);
 </script>
 <style>
-#voiceBtn{position:fixed;top:18px;right:22px;z-index:60;padding:8px 16px;border-radius:999px;border:1px solid rgba(216,180,90,.55);background:rgba(10,13,24,.74);color:#f0d68a;font-size:13px;cursor:pointer;backdrop-filter:blur(8px)}
-#voiceBtn.on{background:rgba(240,198,126,.18)}
+#voiceBtn{position:fixed;top:18px;right:22px;z-index:60;padding:8px 16px;border-radius:999px;border:1px solid rgba(63,224,255,.55);background:rgba(10,13,24,.74);color:#9fe8ff;font-size:13px;cursor:pointer;backdrop-filter:blur(8px)}
+#voiceBtn.on{background:rgba(63,224,255,.18)}
 @media (max-width:760px){#voiceBtn{top:10px;right:10px;padding:6px 12px;font-size:12px}}
 </style>
 <button id="voiceBtn">🔊 开启配音解说</button>
@@ -593,8 +593,8 @@ if (AUTO) {
 </nav>
 <style>
 .ep-nav{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:10px;z-index:999;}
-.ep-btn{display:inline-block;padding:9px 16px;border-radius:999px;border:1px solid rgba(216,180,90,.55);background:rgba(10,13,24,.74);color:#f0d68a;font-size:13px;letter-spacing:.05em;text-decoration:none;backdrop-filter:blur(8px);}
-.ep-btn:hover{background:rgba(216,180,90,.22)}
+.ep-btn{display:inline-block;padding:9px 16px;border-radius:999px;border:1px solid rgba(63,224,255,.55);background:rgba(10,13,24,.74);color:#9fe8ff;font-size:13px;letter-spacing:.05em;text-decoration:none;backdrop-filter:blur(8px);}
+.ep-btn:hover{background:rgba(63,224,255,.22)}
 @media (max-width:760px){.ep-nav{gap:6px;bottom:10px}.ep-btn{padding:8px 11px;font-size:12px}}
 </style>
 
